@@ -60,11 +60,13 @@
   <script src="Js/feature.js"></script>
   <script src="Js/main.js"></script>
   <script>
-	  if ('serviceWorker' in navigator) {
-		  window.addEventListener('load', () => {
-			  navigator.serviceWorker.register('Js/sw.js')
-		 });
-	  }
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./Js/sw.js')
+        .then((register) => { console.log("service work", register) })
+        .catch((e) => { console.log("error", e) })
+		});
+    }
   </script>
 </body>
 </html>
