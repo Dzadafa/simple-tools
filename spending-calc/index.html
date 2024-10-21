@@ -59,5 +59,12 @@
 
   <script src="Js/feature.js"></script>
   <script src="Js/main.js"></script>
+  <script>
+	  if ('serviceWorker' in navigator) {
+		  window.addEvenListener('load', () => {
+			  navigator.serviceWorker.register('Js/sw.js')
+		 });
+	  }
+  </script>
 </body>
 </html>
