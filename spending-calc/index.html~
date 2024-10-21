@@ -61,7 +61,7 @@
   <script src="Js/main.js"></script>
   <script>
 	  if ('serviceWorker' in navigator) {
-		  window.addEventListener('load', () => {
+		  window.addEvenListener('load', () => {
 			  navigator.serviceWorker.register('Js/sw.js')
 		 });
 	  }
