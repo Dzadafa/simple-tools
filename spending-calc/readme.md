@@ -11,7 +11,7 @@ A simple notes app to keep track of your spending
 
 ## Demo
 
-[Dzadafa.vercel.app](https://offtools.vercel.app/spending-calc/)
+[offline tools](https://offtools.vercel.app/spending-calc/)
 
 
 ## FAQ
