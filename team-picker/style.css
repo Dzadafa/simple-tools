@@ -1,0 +1,183 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+:root{
+  --black: #0c0c0c;
+  --white: #f0f0f0;
+  --poppins: "Poppins", sans-serif;
+  --skin:#ebaf4e;
+  --salmon:#eb804e;
+  --green: #61e97c;
+}
+
+*{
+  margin: 0;
+  padding: 0;
+  font-family: var(--poppins);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px; 
+}
+
+/* Scrollbar track (background of the scrollbar) */
+::-webkit-scrollbar-track {
+  display: none; 
+}
+
+/* Scrollbar thumb (the draggable part) */
+::-webkit-scrollbar-thumb {
+  background: #888; 
+  border-radius: 10px;  
+  border: 3px solid #f1f1f1;
+}
+
+/* Scrollbar thumb on hover (changes color when hovered) */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;  /* Darker color when hovered */
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+body::-webkit-scrollbar-thumb{
+  background: #55555500;
+}
+
+body::-webkit-scrollbar-thumb:hover{
+  background: #888;
+}
+/* end of scrollbar style */
+
+body{
+  background: var(--white);
+  margin: 10px 0px;
+}
+
+header{
+  max-width: 100dvw;
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+}
+
+h1{
+  width: fit-content;
+  height: fit-content;
+  color: var(--black);
+}
+
+main{
+  min-height: 80dvh;
+  height: auto;
+  max-width: 100dvw;
+  margin: 0px 20px;
+  display: flex;
+  flex-wrap: wrap-reverse;
+  justify-content: space-evenly;
+}
+
+i{
+  cursor: pointer;
+}
+
+main section{
+  border: 2px solid var(--black);
+  padding: 0px 10px;
+  margin: 10px 0px;
+  max-width: 400px;
+  max-height: 450px;
+  width: 100%;
+  min-width: 200px;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+section h2{
+  padding: 5px 0px;
+  margin-bottom: 5px;
+}
+
+li {
+  list-style: none;
+  padding: 5px 10px;
+  margin: 10px 0;
+  border: 1px solid var(--black);
+  border-radius: 10px;
+}
+
+section ul.member-items {
+  width: 100%;
+  height: 70%;
+  max-height: 70%; 
+  overflow-y: auto; 
+  margin: 5px 0 10px 0;
+  box-sizing: border-box; 
+}
+
+.members-list h2{
+  width: 110%;
+  text-align: center;
+  background-color: var(--salmon);
+}
+
+.result h2{
+  width: 110%;
+  text-align: center;
+  background-color: var(--skin);
+}
+
+.add-member{
+  all: unset;
+  width: 100%;
+  display: flex;
+  margin: 10px 10px 5px 10px;
+  align-items: center;
+  gap: 5px;
+}
+
+.add-member input[type=text]{
+  all: unset;
+  border-bottom: 2px dashed var(--black);
+  width: 100%;
+}
+
+.add-member i{
+  text-align: center;
+  padding: 10px;
+  border-radius: 40px;
+  border: 1px solid var(--black);
+}
+
+.add-member i.fa-plus{
+  padding: 10px 11px;
+  background: var(--green);
+}
+
+.add-member i.fa-list{
+  background-color: var(--skin);
+}
+
+.members-list .generateBtn{
+  all: unset;
+  width: 100%;
+  text-align: center;
+  padding: 5px 0;
+  margin: 0 10px 10px 10px;
+  font-weight: 500;
+  border-radius: 20px;
+  border: 1px solid var(--black);
+  background: var(--green);
+  transition: .5s ease;
+}
+
+.generateBtn:hover{
+  box-shadow: 2px 5px 2px 0 rgba(0, 0, 0, 0.424);
+  
+}
