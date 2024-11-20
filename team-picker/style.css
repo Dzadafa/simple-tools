@@ -219,7 +219,17 @@ section ul.member-items {
 
 .result{
   display: flex;
+  height: auto;
+  justify-content: space-between;
+}
 
+.capture {
+  max-height: unset;
+  overflow-y: unset;
+}
+
+.capture button{
+  visibility: hidden;
 }
 
 .result h2{
@@ -289,6 +299,7 @@ div.settings{
   width: inherit;
   max-width: inherit;
   height: inherit;
+  z-index: 99;
 }
 
 div.settings section{
@@ -308,7 +319,6 @@ div.settings section{
   border: 2px solid var(--black);
   border-radius: 20px;
   gap: 20px;
-  z-index: 1000;
 }
 
 .settings #blur{
@@ -316,7 +326,6 @@ div.settings section{
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 999;
   width: 100%;
   height: 100%;
   background-color: #f0f0f06c;
@@ -358,16 +367,32 @@ div.settings section{
   display: none;
 }
 
-.modal-custom-alert {
+.custom-modal-alert-group{
+  z-index: 100;
+  width: 90dvw;
+  height: auto;
   position: fixed;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+  transition: .5s ease-in-out;
+}
+
+.custom-modal-alert-group:empty{
+  display: none;
+}
+
+.modal-custom-alert {
+  width: fit-content;
   background-color: var(--white);
   color: var(--black);
   padding: 10px 30px;
   border-radius: 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.401);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
   z-index: 1000;
   opacity: 1;
   display: flex;
@@ -378,12 +403,12 @@ div.settings section{
 
 .modal-custom-alert.fade-in {
   opacity: 0;
-  transform: translateX(-50%) translateY(20px);
+  transform: translateY(20px);
 }
 
 .modal-custom-alert.fade-out {
   opacity: 0;
-  transform: translateX(-50%) translateY(-20px);
+  transform: translateY(-20px);
 }
 
 .modal-custom-alert i{

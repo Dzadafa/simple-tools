@@ -5,24 +5,44 @@ const main = document.querySelector('main')
 const plusIcon = document.querySelector('i.fa-plus')
 const settingBtn = document.querySelector('i.fa-gear')
 const generateBtn = document.querySelector('.generateBtn')
+const downloadBtn = document.querySelector('.downloadBtn')
 
 let memberList = [];
 let groupAmount = 2;
 let maxPeople = 2;
 let randomizedList = [];
+const customAlertParent = '.custom-modal-alert-group'
 
-listInput.addEventListener('keydown', (e) => {
+window.onload = () => customAlert("This page is not available offline yet", false, customAlertParent, 4000)
+
+listInput.onkeydown = (e) => {
   if (e.key === 'Enter') {
     const succeed = add_list(memberItems, listInput.value);
     succeed? listInput.value = '' : {};
   }
-})
+}
+
+downloadBtn.onclick = async (e) => {
+  const target = randomizedTeams.parentElement
+  if (randomizedList.length >= 1) {
+    try {
+      target.classList.add('capture')
+      await elementToImg('download-target');  // Wait for image generation
+    } catch (error) {
+      console.error("Error generating image:", error);
+    } finally {
+      target.classList.remove('capture')
+    }
+  } else {
+    customAlert("Can't download an empty result", true, customAlertParent);
+  }
+};
 
 generateBtn.onclick = (e) => {
   if (memberList.length >= 3) {
     randomizedList = randomSplitList(memberList, groupAmount)
     randomizedTeamsGenerator(randomizedTeams, randomizedList)
-  } else customAlert("You need at least 3 players to start!");
+  } else customAlert("You need at least 3 players to start!", true, customAlertParent);
 }
 
 const eachItemUpdate = () => {

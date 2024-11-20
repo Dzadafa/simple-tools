@@ -86,19 +86,20 @@ function delay(callback, ms) {
   };
 }
 
-function customAlert(prompt) {
+function customAlert(prompt, vibrateDevice=false, customParentSelector, customTime=3000) {
   const body = document.body;
 
-  const existed = document.querySelector('.modal-custom-alert')
-  if (existed) {
-    existed.remove()
+  const existed = document.querySelectorAll('.modal-custom-alert')
+  if (existed.length > 3) {
+    existed[existed.length].remove()
   }
 
-  const newAlert = document.createElement('div');
+  const newAlert = document.createElement('p');
   newAlert.innerHTML = `<i class="fa-solid fa-exclamation"></i> ${prompt}`;
   newAlert.classList.add('modal-custom-alert', 'fade-in');
 
-  body.appendChild(newAlert);
+  customParentSelector? document.querySelector(customParentSelector).appendChild(newAlert) : body.appendChild(newAlert);
+  if (vibrateDevice) navigator.vibrate(100);
   setTimeout(() => {
     newAlert.classList.remove('fade-in');
   }, 500);
@@ -107,5 +108,25 @@ function customAlert(prompt) {
     setTimeout(() => {
       newAlert.remove();
     }, 500);
-  }, 3000);
+  }, customTime);
+}
+
+function elementToImg (targetId) {
+  const element = document.getElementById(targetId);
+
+  html2canvas(element, {scale: 3}).then(canvas => {
+    // Create a download link
+    const link = document.createElement('a');
+    link.download = 'screenshot.png'; 
+
+    // Convert canvas to data URL
+    link.href = canvas.toDataURL('image/png'); 
+    document.body.appendChild(link); 
+    link.click(); 
+
+    setTimeout(() => {
+      document.body.removeChild(link); 
+      URL.revokeObjectURL(link.href); 
+    }, 100); 
+  });
 }
