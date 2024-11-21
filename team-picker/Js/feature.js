@@ -114,10 +114,10 @@ function customAlert(prompt, vibrateDevice=false, customParentSelector, customTi
 function elementToImg (targetId) {
   const element = document.getElementById(targetId);
 
-  html2canvas(element, {scale: 3}).then(canvas => {
+  html2canvas(element, {scale: 5}).then(canvas => {
     // Create a download link
     const link = document.createElement('a');
-    link.download = 'screenshot.png'; 
+    link.download = 'result.png'; 
 
     // Convert canvas to data URL
     link.href = canvas.toDataURL('image/png'); 

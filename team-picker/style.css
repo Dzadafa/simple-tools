@@ -219,11 +219,13 @@ section ul.member-items {
 
 .result{
   display: flex;
+  position: relative;
   height: auto;
   justify-content: space-between;
 }
 
 .capture {
+  position: relative;
   max-height: unset;
   overflow-y: unset;
 }
@@ -415,4 +417,24 @@ div.settings section{
   padding: 0 10px;
   font-size: 1.3em;
   color: var(--red);
+}
+
+.watermark{
+  position: absolute;
+  display: flex;
+  align-items: center;
+  width: 30px;
+  aspect-ratio: 1/1;
+  background: url(icon.svg);
+  background-size: cover;
+  background-position: center;
+  bottom: 10px;
+  left: 30%;
+  transform: translateX(-30%);
+}
+
+.watermark::after{
+  position: absolute;
+  left: 100%;
+  content: 'offtools.vercel.app';
 }

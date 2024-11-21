@@ -25,13 +25,19 @@ listInput.onkeydown = (e) => {
 downloadBtn.onclick = async (e) => {
   const target = randomizedTeams.parentElement
   if (randomizedList.length >= 1) {
+    
     try {
+      const wm = document.createElement('div')
+      wm.classList.add('watermark')
+      target.appendChild(wm)
+
       target.classList.add('capture')
       await elementToImg('download-target');  // Wait for image generation
     } catch (error) {
       console.error("Error generating image:", error);
     } finally {
       target.classList.remove('capture')
+      target.querySelector('.watermark').remove()
     }
   } else {
     customAlert("Can't download an empty result", true, customAlertParent);
