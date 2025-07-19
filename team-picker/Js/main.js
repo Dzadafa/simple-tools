@@ -17,7 +17,8 @@ window.onload = () => customAlert("This page is not available offline yet", fals
 
 listInput.onkeydown = (e) => {
   if (e.key === 'Enter') {
-    const succeed = add_list(memberItems, listInput.value);
+    const safeInput = escapeHTML(listInput.value);
+    const succeed = add_list(memberItems, safeInput);
     succeed? listInput.value = '' : {};
   }
 }
