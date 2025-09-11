@@ -1,19 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 
-:root{
+:root {
   --black: #0c0c0c;
   --white: #f0f0f0;
   --poppins: "Poppins", sans-serif;
-  --skin:#ebb35a;
-  --salmon:#ef8d60;
+  --skin: #ebb35a;
+  --salmon: #ef8d60;
   --green: #92ebac;
   --red: #e26262;
-  --1:var(--salmon);
-  --2:var(--red);
-  --3:var(--green);
+  --1: var(--salmon);
+  --2: var(--red);
+  --3: var(--green);
 }
 
-*{
+* {
   margin: 0;
   padding: 0;
   font-family: var(--poppins);
@@ -22,68 +22,68 @@
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 10px; 
+  width: 10px;
 }
 
 /* Scrollbar track (background of the scrollbar) */
 ::-webkit-scrollbar-track {
-  display: none; 
+  display: none;
 }
 
 /* Scrollbar thumb (the draggable part) */
 ul:hover::-webkit-scrollbar-thumb,
 div.randomized-list:hover::-webkit-scrollbar-thumb {
-  background: #888888b3; 
-  border-radius: 10px;  
+  background: #888888b3;
+  border-radius: 10px;
   border: 3px solid var(--white);
 }
 
 /* Scrollbar thumb on hover (changes color when hovered) */
-ul:hover::-webkit-scrollbar-thumb:hover, 
+ul:hover::-webkit-scrollbar-thumb:hover,
 div.randomized-list:hover::-webkit-scrollbar-thumb:hover {
-  background: #555;  /* Darker color when hovered */
+  background: #555; /* Darker color when hovered */
 }
 
 ::-webkit-scrollbar-button {
   display: none;
 }
 
-body::-webkit-scrollbar-thumb{
+body::-webkit-scrollbar-thumb {
   border-radius: 10px;
   background: #55555500;
-  border: 2px solid var(--white)
+  border: 2px solid var(--white);
 }
 
-body::-webkit-scrollbar-thumb:hover{
+body::-webkit-scrollbar-thumb:hover {
   background: #888;
 }
 /* end of scrollbar style */
 
-body{
+body {
   overflow-y: auto;
-  -webkit-user-select: none;  /* Safari */
-  -moz-user-select: none;     /* Firefox */
-  -ms-user-select: none;      /* Internet Explorer/Edge */
-  user-select: none;          /* Standard syntax */
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Standard syntax */
 
   background: var(--white);
   margin: 10px 0px;
 }
 
-header{
+header {
   max-width: 100dvw;
   display: flex;
   justify-content: center;
   padding: 10px;
 }
 
-h1{
+h1 {
   width: fit-content;
   height: fit-content;
   color: var(--black);
 }
 
-main{
+main {
   min-height: 80dvh;
   height: auto;
   max-width: 100dvw;
@@ -95,19 +95,21 @@ main{
   gap: 10px;
 }
 
-a{
+a {
   all: unset;
 }
 
-i, button, a{
+i,
+button,
+a {
   cursor: pointer;
 }
 
-li{
+li {
   list-style: none;
 }
 
-main section{
+main section {
   border: 2px solid var(--black);
   padding: 0px 10px;
   margin: 10px 0px;
@@ -124,7 +126,7 @@ main section{
   overflow: hidden;
 }
 
-section h2{
+section h2 {
   padding: 5px 0px;
   margin-bottom: 5px;
 }
@@ -139,12 +141,12 @@ ul.member-items li {
   justify-content: space-between;
 }
 
-ul li i.fa-trash{
+ul li i.fa-trash {
   visibility: hidden;
   color: var(--red);
 }
 
-ul li:hover i.fa-trash{
+ul li:hover i.fa-trash {
   visibility: visible;
 }
 
@@ -152,18 +154,18 @@ section ul.member-items {
   width: 100%;
   height: 500px;
   max-height: 70%;
-  overflow-y: auto; 
+  overflow-y: auto;
   margin: 5px 0 10px 0;
-  box-sizing: border-box; 
+  box-sizing: border-box;
 }
 
-.members-list h2{
+.members-list h2 {
   width: 110%;
   text-align: center;
   background-color: var(--salmon);
 }
 
-.add-member{
+.add-member {
   all: unset;
   width: 100%;
   display: flex;
@@ -172,29 +174,29 @@ section ul.member-items {
   gap: 5px;
 }
 
-.add-member input[type=text]{
+.add-member input[type="text"] {
   all: unset;
   border-bottom: 2px dashed var(--black);
   width: 100%;
 }
 
-.add-member i{
+.add-member i {
   text-align: center;
   padding: 10px;
   border-radius: 40px;
   border: 1px solid var(--black);
 }
 
-.add-member i.fa-plus{
+.add-member i.fa-plus {
   padding: 10px 11px;
   background: var(--green);
 }
 
-.add-member i.fa-gear{
+.add-member i.fa-gear {
   background-color: var(--skin);
 }
 
-.btnStyle1{
+.btnStyle1 {
   all: unset;
   width: 100%;
   text-align: center;
@@ -204,20 +206,20 @@ section ul.member-items {
   border-radius: 20px;
   border: 1px solid var(--black);
   background: var(--green);
-  transition: .2s ease;
+  transition: 0.2s ease;
 }
 
-.btnStyle1:hover{
+.btnStyle1:hover {
   transform: translateY(-4px);
   box-shadow: 2px 5px 0 0 var(--black);
 }
 
-.btnStyle1:active{
+.btnStyle1:active {
   transform: translateY(0px);
   box-shadow: 0 0 0 0;
 }
 
-.result{
+.result {
   display: flex;
   position: relative;
   height: auto;
@@ -230,17 +232,17 @@ section ul.member-items {
   overflow-y: unset;
 }
 
-.capture button{
+.capture button {
   visibility: hidden;
 }
 
-.result h2{
+.result h2 {
   width: 110%;
   text-align: center;
   background-color: var(--skin);
 }
 
-.randomized-list{
+.randomized-list {
   margin: 10px 0;
   height: 100%;
   width: 100%;
@@ -252,7 +254,7 @@ section ul.member-items {
   gap: 10px;
 }
 
-.randomized-list ul{
+.randomized-list ul {
   border: 1.5px solid var(--black);
   width: 40%;
   overflow-x: hidden;
@@ -260,7 +262,7 @@ section ul.member-items {
   padding-bottom: 10px;
 }
 
-.randomized-list ul li{
+.randomized-list ul li {
   text-align: left;
   max-width: 100%;
   white-space: nowrap;
@@ -269,16 +271,16 @@ section ul.member-items {
   margin: 0 10px;
 }
 
-.randomized-list ul > li{
+.randomized-list ul > li {
   padding-top: 5px;
 }
 
-.randomized-list ul > li ~ li{ 
+.randomized-list ul > li ~ li {
   padding-top: 0;
   border: none;
 }
 
-.randomized-list p{
+.randomized-list p {
   width: 100%;
   text-align: center;
 }
@@ -288,15 +290,15 @@ footer {
   text-align: center;
 }
 
-footer i{
+footer i {
   font-size: medium;
 }
 
-footer a{
+footer a {
   font-size: small;
 }
 
-div.settings{
+div.settings {
   position: fixed;
   width: inherit;
   max-width: inherit;
@@ -304,7 +306,7 @@ div.settings{
   z-index: 99;
 }
 
-div.settings section{
+div.settings section {
   all: unset;
   width: 90%;
   position: fixed;
@@ -323,7 +325,7 @@ div.settings section{
   gap: 20px;
 }
 
-.settings #blur{
+.settings #blur {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -335,20 +337,20 @@ div.settings section{
   backdrop-filter: blur(5px);
 }
 
-.settings i.fa-xmark{
+.settings i.fa-xmark {
   position: absolute;
   right: 5%;
   font-size: larger;
 }
 
-.settings label{
+.settings label {
   display: flex;
   flex-direction: row;
   gap: 20px;
   justify-content: space-between;
 }
 
-.settings label input{
+.settings label input {
   all: unset;
   width: 50px;
   text-align: center;
@@ -357,19 +359,20 @@ div.settings section{
 
 .settings label input[type="number"]::-webkit-outer-spin-button,
 .settings label input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
+  -webkit-appearance: none;
+  margin: 0;
 }
 
-.settings button.saveSettings{
+.settings button.saveSettings {
   width: 50%;
 }
 
-:disabled, [aria-disabled=true]{
+:disabled,
+[aria-disabled="true"] {
   display: none;
 }
 
-.custom-modal-alert-group{
+.custom-modal-alert-group {
   z-index: 100;
   width: 90dvw;
   height: auto;
@@ -381,10 +384,10 @@ div.settings section{
   align-items: center;
   flex-direction: column;
   gap: 10px;
-  transition: .5s ease-in-out;
+  transition: 0.5s ease-in-out;
 }
 
-.custom-modal-alert-group:empty{
+.custom-modal-alert-group:empty {
   display: none;
 }
 
@@ -394,7 +397,7 @@ div.settings section{
   color: var(--black);
   padding: 10px 30px;
   border-radius: 20px;
-  box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
   z-index: 1000;
   opacity: 1;
   display: flex;
@@ -413,13 +416,13 @@ div.settings section{
   transform: translateY(-20px);
 }
 
-.modal-custom-alert i{
+.modal-custom-alert i {
   padding: 0 10px;
   font-size: 1.3em;
   color: var(--red);
 }
 
-.watermark{
+.watermark {
   position: absolute;
   display: flex;
   align-items: center;
@@ -433,8 +436,25 @@ div.settings section{
   transform: translateX(-30%);
 }
 
-.watermark::after{
+.watermark::after {
   position: absolute;
   left: 100%;
-  content: 'offtools.vercel.app';
+  content: "offtools.vercel.app";
+}
+
+.result-animation {
+  translate: 0 -70%;
+  opacity: 0;
+  animation: result-keyframe 1s ease-in-out both;
+}
+
+@keyframes result-keyframe {
+  0% {
+    opacity: 0;
+    translate: 0 -70%;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+  }
 }

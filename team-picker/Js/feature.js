@@ -8,12 +8,12 @@ function add_list(parentObj, value){
   const trashIcon = newList.querySelector('.fa-trash');
   trashIcon.addEventListener('click', () => {
     remove_list(newList, value)
-    eachItemUpdate() //add-on
+    eachItemUpdate() 
   });
 
   memberList.push(value)
 
-  eachItemUpdate() //add-on
+  eachItemUpdate() 
 
   return parentObj.appendChild(newList);
 }
@@ -27,7 +27,9 @@ function randomizedTeamsGenerator(parentObj, list){
     }
     const team = document.createElement('ul')
     team.innerHTML = members
+    team.classList.add('result-animation')
     parentObj.append(team)
+    team.style.animationDelay = `${i * 1}s`
   }
 }
 
@@ -115,11 +117,9 @@ function elementToImg (targetId) {
   const element = document.getElementById(targetId);
 
   html2canvas(element, {scale: 5}).then(canvas => {
-    // Create a download link
     const link = document.createElement('a');
     link.download = 'result.png'; 
 
-    // Convert canvas to data URL
     link.href = canvas.toDataURL('image/png'); 
     document.body.appendChild(link); 
     link.click(); 
