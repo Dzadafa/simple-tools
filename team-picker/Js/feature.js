@@ -30,6 +30,11 @@ function randomizedTeamsGenerator(parentObj, list){
     team.classList.add('result-animation')
     parentObj.append(team)
     team.style.animationDelay = `${i * 1}s`
+
+    team.addEventListener("animationend", (e) => {
+      alert("dumbass")
+      team.classList.remove('result-animation')
+    })
   }
 }
 
