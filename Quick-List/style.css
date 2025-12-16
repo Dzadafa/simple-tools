@@ -127,6 +127,12 @@ input[type="text"] {
   box-sizing: border-box;
 }
 
+input.dashboard-input {
+  max-width: 300px;
+  text-align: center;
+  border: 2px solid var(--accent-blue-300);
+}
+
 input[type="text"]:focus {
   outline: none;
   border-color: var(--accent-blue-600);
@@ -212,19 +218,44 @@ ul#myItems li {
   box-shadow: 0 2px 4px rgba(0,0,0,0.02);
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
-ul#myItems li::before {
+ul#myItems li span::before {
   content: "•";
   color: var(--primary-green-600);
   font-weight: bold;
   font-size: 1.5em;
   margin-right: 10px;
   line-height: 0;
+  vertical-align: middle;
+}
+
+button.delete-item-btn {
+  all: unset;
+  cursor: pointer;
+  color: var(--secondary-red-300);
+  font-weight: bold;
+  font-size: 1.2rem;
+  padding: 0 10px;
+  line-height: 1;
+}
+
+button.delete-item-btn:hover {
+  color: var(--secondary-red-600);
 }
 
 .hidden {
   display: none;
+}
+
+.badge {
+  font-size: 0.5em;
+  background-color: var(--neutral-400);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  vertical-align: middle;
 }
 
 a {

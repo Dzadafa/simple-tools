@@ -40,6 +40,19 @@ const MockAPI = {
     return false
   },
 
+  async deleteItem(id, itemText) {
+    const db = this._getDb()
+    if (db[id]) {
+      const index = db[id].items.indexOf(itemText)
+      if (index > -1) {
+        db[id].items.splice(index, 1)
+        this._saveDb(db)
+        return true
+      }
+    }
+    return false
+  },
+
   async stopList(id) {
     const db = this._getDb()
     const list = db[id]
@@ -93,12 +106,20 @@ async function loadDashboard(container) {
   const res = await fetch('./default.html');
   container.innerHTML = await res.text();
   
-  renderHistoryTable()
-
-  const createBtn = container.querySelector('#createBtn')
-  if(createBtn) {
-    createBtn.addEventListener('click', async () => {
-      const title = "Proto Quick List" 
+  const btn = container.querySelector('#createBtn')
+  const inputObj = document.createElement('input')
+  inputObj.type = 'text'
+  inputObj.id = 'newTitleInput'
+  inputObj.placeholder = "List Title (e.g. Standup)"
+  inputObj.className = "dashboard-input"
+  
+  if(btn) {
+    btn.parentNode.insertBefore(inputObj, btn)
+  
+    btn.addEventListener('click', async () => {
+      const titleVal = inputObj.value.trim()
+      const title = titleVal || "Quick List" 
+      
       const newId = await MockAPI.createList(title)
       
       const hosted = JSON.parse(localStorage.getItem('my_hosted_lists') || '[]')
@@ -108,21 +129,24 @@ async function loadDashboard(container) {
       window.location.search = `?id=${newId}`
     })
   }
+  
+  renderHistoryTable()
 }
 
 async function loadHostView(container, listData, isArchived = false) {
   container.innerHTML = `
     <div class="container">
-      <h1>${listData.title} ${isArchived ? '(Archived)' : ''}</h1>
+      <h1>${listData.title} ${isArchived ? '<span class="badge">Archived</span>' : ''}</h1>
+      
       ${!isArchived ? `
         <div style="margin-bottom: 20px; display:flex; gap:10px; flex-direction:column; align-items:center;">
-          <a href="?id=${listData.id}&view=guest" target="_blank" style="color: var(--accent-blue-600); font-weight:bold;">Open Test User View (New Tab)</a>
+          <a href="?id=${listData.id}&view=guest" target="_blank" style="color: var(--accent-blue-600); font-weight:bold; font-size: 0.9em;">Open Guest View (New Tab)</a>
           <button class="stop-btn" id="stopBtn">Stop & Archive</button>
         </div>
       ` : ''}
       
       <div class="list-display">
-        <h3>Copyable List:</h3>
+        <h3>${isArchived ? 'Final List:' : 'Live List:'}</h3>
         <textarea readonly id="copyTarget" class="copy-area"></textarea>
       </div>
       
@@ -137,7 +161,7 @@ async function loadHostView(container, listData, isArchived = false) {
       const finalData = await MockAPI.stopList(listData.id)
       if(finalData) {
         saveToHistory(finalData)
-        window.location.href = "index.html"
+        window.location.reload()
       }
     })
   }
@@ -147,12 +171,15 @@ async function loadUserView(container, listData) {
   const res = await fetch('./user.html');
   container.innerHTML = await res.text();
   
+  container.querySelector('h1').innerText = listData.title
+  
   const form = container.querySelector('#addForm')
   const input = container.querySelector('#itemInput')
   const myItemsList = container.querySelector('#myItems')
 
   let myItems = JSON.parse(sessionStorage.getItem(`my_items_${listData.id}`) || '[]')
-  renderUserItems(myItems, myItemsList)
+  
+  renderUserItems(myItems, myItemsList, listData.id)
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
@@ -163,7 +190,8 @@ async function loadUserView(container, listData) {
     
     myItems.push(val)
     sessionStorage.setItem(`my_items_${listData.id}`, JSON.stringify(myItems))
-    renderUserItems(myItems, myItemsList)
+    
+    renderUserItems(myItems, myItemsList, listData.id)
     input.value = ''
   })
 }
@@ -185,8 +213,29 @@ function updateHostDisplay(data) {
   textarea.value = text
 }
 
-function renderUserItems(items, ul) {
-  ul.innerHTML = items.map(i => `<li>${i}</li>`).join('')
+function renderUserItems(items, ul, listId) {
+  ul.innerHTML = ''
+  
+  items.forEach((item, idx) => {
+    const li = document.createElement('li')
+    li.innerHTML = `
+      <span>${item}</span>
+      <button class="delete-item-btn" title="Remove">×</button>
+    `
+    
+    li.querySelector('.delete-item-btn').addEventListener('click', async () => {
+      if(confirm('Remove this item?')) {
+        await MockAPI.deleteItem(listId, item)
+        
+        items.splice(idx, 1) 
+        sessionStorage.setItem(`my_items_${listId}`, JSON.stringify(items))
+        
+        renderUserItems(items, ul, listId)
+      }
+    })
+    
+    ul.appendChild(li)
+  })
 }
 
 function saveToHistory(data) {
