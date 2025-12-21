@@ -1,69 +1,45 @@
-const MockAPI = {
-  _getDb() {
-    return JSON.parse(localStorage.getItem('mock_db_active_lists') || '{}')
+const API = {
+  async _call(payload) {
+    try {
+      const res = await fetch('/api/proxy', { 
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      })
+      
+      const data = await res.json()
+      return data
+    } catch (e) {
+      console.error(e)
+      return null
+    }
   },
 
-  _saveDb(db) {
-    localStorage.setItem('mock_db_active_lists', JSON.stringify(db))
-  },
-  
   async createList(title) {
-    const db = this._getDb()
-    const id = "list_" + Date.now()
-    
-    db[id] = {
-      id,
-      title,
-      items: [],
-      createdAt: new Date().toISOString(),
-      participants: 0
-    }
-    
-    this._saveDb(db)
-    return id
+    return this._call({ action: "create", title })
   },
 
   async getList(id) {
-    const db = this._getDb()
-    if (db[id]) return db[id]
-    return null
+    return this._call({ action: "get", id })
   },
 
   async addItem(id, item) {
-    const db = this._getDb()
-    if (db[id]) {
-      db[id].items.push(item)
-      db[id].participants += 1 
-      this._saveDb(db)
-      return true
-    }
-    return false
+    return this._call({ action: "add", id, item })
   },
 
-  async deleteItem(id, itemText) {
-    const db = this._getDb()
-    if (db[id]) {
-      const index = db[id].items.indexOf(itemText)
-      if (index > -1) {
-        db[id].items.splice(index, 1)
-        this._saveDb(db)
-        return true
-      }
-    }
-    return false
+  async deleteItem(id, item) {
+    return this._call({ action: "delete", id, item })
   },
 
   async stopList(id) {
-    const db = this._getDb()
-    const list = db[id]
-    if (list) {
-      delete db[id]
-      this._saveDb(db)
-      return list
-    }
-    return null
+    return this._call({ action: "stop", id })
   }
 }
+
+let pollTimer = null
+const POLL_INTERVAL = 3000
 
 async function loadContent() {
   const params = new URLSearchParams(window.location.search);
@@ -80,9 +56,9 @@ async function loadContent() {
     return
   }
 
-  const listData = await MockAPI.getList(listId)
+  const listData = await API.getList(listId)
 
-  if (listData) {
+  if (listData && listData.id) {
     if (isHost) {
       loadHostView(placeholder, listData)
     } else {
@@ -120,27 +96,33 @@ async function loadDashboard(container) {
       const titleVal = inputObj.value.trim()
       const title = titleVal || "Quick List" 
       
-      const newId = await MockAPI.createList(title)
+      btn.innerText = "Creating..."
+      const response = await API.createList(title)
       
-      const hosted = JSON.parse(localStorage.getItem('my_hosted_lists') || '[]')
-      hosted.push(newId)
-      localStorage.setItem('my_hosted_lists', JSON.stringify(hosted))
-      
-      window.location.search = `?id=${newId}`
+      if (response && response.id) {
+        const hosted = JSON.parse(localStorage.getItem('my_hosted_lists') || '[]')
+        hosted.push(response.id)
+        localStorage.setItem('my_hosted_lists', JSON.stringify(hosted))
+        
+        window.location.search = `?id=${response.id}`
+      } else {
+        alert("Error creating list. Check your URL.")
+        btn.innerText = "Create"
+      }
     })
   }
   
   renderHistoryTable()
 }
 
-async function loadHostView(container, listData, isArchived = false) {
+async function loadHostView(container, initialData, isArchived = false) {
   container.innerHTML = `
     <div class="container">
-      <h1>${listData.title} ${isArchived ? '<span class="badge">Archived</span>' : ''}</h1>
+      <h1>${initialData.title} ${isArchived ? '<span class="badge">Archived</span>' : ''}</h1>
       
       ${!isArchived ? `
         <div style="margin-bottom: 20px; display:flex; gap:10px; flex-direction:column; align-items:center;">
-          <a href="?id=${listData.id}&view=guest" target="_blank" style="color: var(--accent-blue-600); font-weight:bold; font-size: 0.9em;">Open Guest View (New Tab)</a>
+          <a href="?id=${initialData.id}&view=guest" target="_blank" style="color: var(--accent-blue-600); font-weight:bold; font-size: 0.9em;">Open Guest View (New Tab)</a>
           <button class="stop-btn" id="stopBtn">Stop & Archive</button>
         </div>
       ` : ''}
@@ -154,14 +136,27 @@ async function loadHostView(container, listData, isArchived = false) {
     </div>
   `
 
-  updateHostDisplay(listData)
+  updateHostDisplay(initialData)
 
   if(!isArchived) {
+    startPolling(initialData.id, (newData) => {
+      if(newData) {
+        updateHostDisplay(newData)
+      } else {
+        stopPolling()
+        alert("This list has been stopped remotely.")
+        window.location.href = 'index.html'
+      }
+    })
+
     document.getElementById('stopBtn').addEventListener('click', async () => {
-      const finalData = await MockAPI.stopList(listData.id)
-      if(finalData) {
-        saveToHistory(finalData)
-        window.location.reload()
+      if(confirm("Stop this list? It will be deleted from the server and saved to your history.")) {
+        stopPolling()
+        const finalData = await API.stopList(initialData.id)
+        if(finalData) {
+          saveToHistory(finalData)
+          window.location.reload()
+        }
       }
     })
   }
@@ -178,21 +173,33 @@ async function loadUserView(container, listData) {
   const myItemsList = container.querySelector('#myItems')
 
   let myItems = JSON.parse(sessionStorage.getItem(`my_items_${listData.id}`) || '[]')
-  
   renderUserItems(myItems, myItemsList, listData.id)
+
+  startPolling(listData.id, (newData) => {
+    if(!newData) {
+      stopPolling()
+      window.location.reload() 
+    }
+  })
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
     const val = input.value.trim()
     if(!val) return
     
-    await MockAPI.addItem(listData.id, val)
-    
-    myItems.push(val)
-    sessionStorage.setItem(`my_items_${listData.id}`, JSON.stringify(myItems))
-    
-    renderUserItems(myItems, myItemsList, listData.id)
-    input.value = ''
+    input.disabled = true
+    const success = await API.addItem(listData.id, val)
+    input.disabled = false
+    input.focus()
+
+    if (success) {
+      myItems.push(val)
+      sessionStorage.setItem(`my_items_${listData.id}`, JSON.stringify(myItems))
+      renderUserItems(myItems, myItemsList, listData.id)
+      input.value = ''
+    } else {
+      alert("Error adding item. The list might be stopped.")
+    }
   })
 }
 
@@ -201,16 +208,32 @@ async function load404(container) {
   container.innerHTML = await res.text();
 }
 
+function startPolling(id, callback) {
+  if(pollTimer) clearInterval(pollTimer)
+  pollTimer = setInterval(async () => {
+    const data = await API.getList(id)
+    callback(data)
+  }, POLL_INTERVAL)
+}
+
+function stopPolling() {
+  if(pollTimer) clearInterval(pollTimer)
+}
+
 function updateHostDisplay(data) {
   const textarea = document.getElementById('copyTarget')
   if(!textarea) return
 
   let text = `${data.title}\n`
-  data.items.forEach((item, index) => {
-    text += `${index + 1}. ${item}\n`
-  })
+  if (data.items && Array.isArray(data.items)) {
+    data.items.forEach((item, index) => {
+      text += `${index + 1}. ${item}\n`
+    })
+  }
   
-  textarea.value = text
+  if (document.activeElement !== textarea) {
+    textarea.value = text
+  }
 }
 
 function renderUserItems(items, ul, listId) {
@@ -225,7 +248,7 @@ function renderUserItems(items, ul, listId) {
     
     li.querySelector('.delete-item-btn').addEventListener('click', async () => {
       if(confirm('Remove this item?')) {
-        await MockAPI.deleteItem(listId, item)
+        await API.deleteItem(listId, item)
         
         items.splice(idx, 1) 
         sessionStorage.setItem(`my_items_${listId}`, JSON.stringify(items))
