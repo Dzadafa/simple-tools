@@ -128,8 +128,8 @@ async function loadHostView(container, initialData, isArchived = false) {
       ` : ''}
       
       <div class="list-display">
-        <h3>${isArchived ? 'Final List:' : 'Live List:'}</h3>
-        <textarea readonly id="copyTarget" class="copy-area"></textarea>
+        <h3 id="listHeader">${isArchived ? 'Final List:' : 'Live List:'}</h3>
+        <textarea readonly id="copyTarget" class="copy-area" title="Click to Copy"></textarea>
       </div>
       
       <button class="secondary-btn" onclick="window.location.href='index.html'">Back to Dashboard</button>
@@ -137,6 +137,26 @@ async function loadHostView(container, initialData, isArchived = false) {
   `
 
   updateHostDisplay(initialData)
+
+  const copyArea = document.getElementById('copyTarget')
+  const header = document.getElementById('listHeader')
+  
+  if(copyArea) {
+    copyArea.style.cursor = "pointer"
+    copyArea.addEventListener('click', () => {
+      copyArea.select()
+      navigator.clipboard.writeText(copyArea.value).then(() => {
+        const originalText = header.innerText
+        header.innerText = "Copied!"
+        header.style.color = "var(--brand-green)"
+        
+        setTimeout(() => {
+          header.innerText = originalText
+          header.style.color = ""
+        }, 1500)
+      })
+    })
+  }
 
   if(!isArchived) {
     startPolling(initialData.id, (newData) => {
