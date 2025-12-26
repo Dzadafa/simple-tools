@@ -41,6 +41,27 @@ const API = {
 let pollTimer = null
 const POLL_INTERVAL = 3000
 
+// --- SECURITY FUNCTION ---
+function sanitizeInput(text) {
+  if (!text) return text;
+  
+  // 1. Block XSS (HTML Injection)
+  let clean = String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+  // 2. Block Excel Formula Injection
+  // If string starts with =, +, -, or @, prepend a single quote to force text mode
+  if (/^[\=\+\-\@]/.test(clean)) {
+    return "'" + clean;
+  }
+  
+  return clean;
+}
+
 async function loadContent() {
   const params = new URLSearchParams(window.location.search);
   const listId = params.get("id")
@@ -116,9 +137,10 @@ async function loadDashboard(container) {
 }
 
 async function loadHostView(container, initialData, isArchived = false) {
+  // Use sanitizeInput instead of escapeHtml
   container.innerHTML = `
     <div class="container">
-      <h1>${initialData.title} ${isArchived ? '<span class="badge">Archived</span>' : ''}</h1>
+      <h1>${sanitizeInput(initialData.title)} ${isArchived ? '<span class="badge">Archived</span>' : ''}</h1>
       
       ${!isArchived ? `
         <div style="margin-bottom: 20px; display:flex; gap:10px; flex-direction:column; align-items:center;">
@@ -186,7 +208,7 @@ async function loadUserView(container, listData) {
   const res = await fetch('./user.html');
   container.innerHTML = await res.text();
   
-  container.querySelector('h1').innerText = listData.title
+  container.querySelector('h1').innerText = sanitizeInput(listData.title)
   
   const form = container.querySelector('#addForm')
   const input = container.querySelector('#itemInput')
@@ -244,10 +266,11 @@ function updateHostDisplay(data) {
   const textarea = document.getElementById('copyTarget')
   if(!textarea) return
 
-  let text = `${data.title}\n`
+  let text = `${sanitizeInput(data.title)}\n`
   if (data.items && Array.isArray(data.items)) {
     data.items.forEach((item, index) => {
-      text += `${index + 1}. ${item}\n`
+      // sanitizeInput here handles both XSS and Excel Formula
+      text += `${index + 1}. ${sanitizeInput(item)}\n`
     })
   }
   
@@ -262,7 +285,7 @@ function renderUserItems(items, ul, listId) {
   items.forEach((item, idx) => {
     const li = document.createElement('li')
     li.innerHTML = `
-      <span>${item}</span>
+      <span>${sanitizeInput(item)}</span>
       <button class="delete-item-btn" title="Remove">×</button>
     `
     
@@ -316,7 +339,7 @@ function renderHistoryTable() {
   tbody.innerHTML = history.map(h => `
     <tr onclick="window.location.href='?id=${h.id}'" style="cursor:pointer">
       <td>${h.createdAt.split('T')[0]}</td>
-      <td>${h.title}</td>
+      <td>${sanitizeInput(h.title)}</td>
       <td>${h.items.length}</td>
     </tr>
   `).join('')
