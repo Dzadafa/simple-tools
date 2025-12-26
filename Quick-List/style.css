@@ -76,7 +76,7 @@ button.primary-btn{
   justify-content: center;
   font-weight: 800;
   font-size: 1.1rem;
-  color: var(--neutral-100);
+  color: var(--neutral-200);
   background-color: var(--accent-blue-600);
   border-radius: .5em;
   padding: 10px 30px;
@@ -120,8 +120,8 @@ button.secondary-btn {
 input[type="text"] {
   font-family: var(--nunito);
   padding: 12px;
-  border-radius: .8em;
-  border: 3px solid var(--neutral-400);
+  border-radius: 8px;
+  border: 2px solid var(--neutral-400);
   font-size: 1rem;
   width: 100%;
   box-sizing: border-box;
@@ -130,7 +130,7 @@ input[type="text"] {
 input.dashboard-input {
   max-width: 300px;
   text-align: center;
-  border: 3px solid var(--neutral-400);
+  border: 2px solid var(--accent-blue-300);
 }
 
 input[type="text"]:focus {
@@ -200,6 +200,26 @@ td {
 tr:hover td {
   background-color: var(--accent-blue-100);
   color: var(--accent-blue-700);
+}
+
+.status-badge {
+  font-size: 0.8em;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-active {
+  background-color: var(--primary-green-100);
+  color: var(--primary-green-700);
+  border: 1px solid var(--primary-green-300);
+}
+
+.status-archived {
+  background-color: var(--neutral-200);
+  color: var(--neutral-700);
+  border: 1px solid var(--neutral-400);
 }
 
 ul#myItems {

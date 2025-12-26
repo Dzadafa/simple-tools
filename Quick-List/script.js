@@ -33,19 +33,17 @@ const API = {
     return this._call({ action: "delete", id, item })
   },
 
-  async stopList(id) {
-    return this._call({ action: "stop", id })
+  async stopList(id, adminKey) {
+    return this._call({ action: "stop", id, adminKey })
   }
 }
 
 let pollTimer = null
 const POLL_INTERVAL = 3000
 
-// --- SECURITY FUNCTION ---
 function sanitizeInput(text) {
   if (!text) return text;
   
-  // 1. Block XSS (HTML Injection)
   let clean = String(text)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -53,8 +51,6 @@ function sanitizeInput(text) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 
-  // 2. Block Excel Formula Injection
-  // If string starts with =, +, -, or @, prepend a single quote to force text mode
   if (/^[\=\+\-\@]/.test(clean)) {
     return "'" + clean;
   }
@@ -68,9 +64,10 @@ async function loadContent() {
   const viewMode = params.get("view")
   const placeholder = document.getElementById("app")
   
-  const myHostedLists = JSON.parse(localStorage.getItem('my_hosted_lists') || '[]')
+  const activeSessions = JSON.parse(localStorage.getItem('active_sessions') || '[]')
+  const hostSession = activeSessions.find(s => s.id === listId)
   
-  const isHost = (viewMode !== 'guest') && myHostedLists.includes(listId)
+  const isHost = (viewMode !== 'guest') && !!hostSession
 
   if (!listId) {
     loadDashboard(placeholder)
@@ -81,7 +78,7 @@ async function loadContent() {
 
   if (listData && listData.id) {
     if (isHost) {
-      loadHostView(placeholder, listData)
+      loadHostView(placeholder, listData, false, hostSession.adminKey)
     } else {
       loadUserView(placeholder, listData)
     }
@@ -120,10 +117,19 @@ async function loadDashboard(container) {
       btn.innerText = "Creating..."
       const response = await API.createList(title)
       
-      if (response && response.id) {
-        const hosted = JSON.parse(localStorage.getItem('my_hosted_lists') || '[]')
-        hosted.push(response.id)
-        localStorage.setItem('my_hosted_lists', JSON.stringify(hosted))
+      if (response && response.id && response.adminKey) {
+        
+        const newSession = {
+          id: response.id,
+          title: title,
+          adminKey: response.adminKey,
+          createdAt: new Date().toISOString(),
+          itemsCount: 0 
+        }
+
+        const sessions = JSON.parse(localStorage.getItem('active_sessions') || '[]')
+        sessions.push(newSession)
+        localStorage.setItem('active_sessions', JSON.stringify(sessions))
         
         window.location.search = `?id=${response.id}`
       } else {
@@ -136,8 +142,7 @@ async function loadDashboard(container) {
   renderHistoryTable()
 }
 
-async function loadHostView(container, initialData, isArchived = false) {
-  // Use sanitizeInput instead of escapeHtml
+async function loadHostView(container, initialData, isArchived = false, adminKey = null) {
   container.innerHTML = `
     <div class="container">
       <h1>${sanitizeInput(initialData.title)} ${isArchived ? '<span class="badge">Archived</span>' : ''}</h1>
@@ -194,10 +199,14 @@ async function loadHostView(container, initialData, isArchived = false) {
     document.getElementById('stopBtn').addEventListener('click', async () => {
       if(confirm("Stop this list? It will be deleted from the server and saved to your history.")) {
         stopPolling()
-        const finalData = await API.stopList(initialData.id)
-        if(finalData) {
+        const finalData = await API.stopList(initialData.id, adminKey)
+        
+        if(finalData && !finalData.error) {
           saveToHistory(finalData)
+          removeFromActive(initialData.id)
           window.location.reload()
+        } else {
+          alert("Error stopping list: " + (finalData?.error || "Unknown error"))
         }
       }
     })
@@ -269,7 +278,6 @@ function updateHostDisplay(data) {
   let text = `${sanitizeInput(data.title)}\n`
   if (data.items && Array.isArray(data.items)) {
     data.items.forEach((item, index) => {
-      // sanitizeInput here handles both XSS and Excel Formula
       text += `${index + 1}. ${sanitizeInput(item)}\n`
     })
   }
@@ -317,6 +325,12 @@ function saveToHistory(data) {
   localStorage.setItem('history_lists', JSON.stringify(history))
 }
 
+function removeFromActive(id) {
+  const sessions = JSON.parse(localStorage.getItem('active_sessions') || '[]')
+  const newSessions = sessions.filter(s => s.id !== id)
+  localStorage.setItem('active_sessions', JSON.stringify(newSessions))
+}
+
 function getArchivedList(id) {
   const history = JSON.parse(localStorage.getItem('history_lists') || '[]')
   return history.find(h => h.id === id)
@@ -326,9 +340,10 @@ function renderHistoryTable() {
   const tbody = document.querySelector('tbody')
   if(!tbody) return
   
+  const activeSessions = JSON.parse(localStorage.getItem('active_sessions') || '[]')
   const history = JSON.parse(localStorage.getItem('history_lists') || '[]')
   
-  if(history.length === 0) {
+  if(activeSessions.length === 0 && history.length === 0) {
     const sessionEl = document.querySelector('.sessions')
     if(sessionEl) sessionEl.classList.add('hidden')
     return
@@ -336,13 +351,25 @@ function renderHistoryTable() {
   
   document.querySelector('.sessions').classList.remove('hidden')
   
-  tbody.innerHTML = history.map(h => `
+  const activeRows = activeSessions.map(s => `
+    <tr onclick="window.location.href='?id=${s.id}'" style="cursor:pointer">
+      <td>${s.createdAt.split('T')[0]}</td>
+      <td>${sanitizeInput(s.title)}</td>
+      <td><span class="status-badge status-active">Active</span></td>
+      <td>-</td>
+    </tr>
+  `).join('')
+  
+  const archivedRows = history.map(h => `
     <tr onclick="window.location.href='?id=${h.id}'" style="cursor:pointer">
       <td>${h.createdAt.split('T')[0]}</td>
       <td>${sanitizeInput(h.title)}</td>
+      <td><span class="status-badge status-archived">Archived</span></td>
       <td>${h.items.length}</td>
     </tr>
   `).join('')
+  
+  tbody.innerHTML = activeRows + archivedRows
 }
 
 loadContent()
