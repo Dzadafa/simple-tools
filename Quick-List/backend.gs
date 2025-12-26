@@ -20,7 +20,8 @@ function handleRequest(e) {
 
     if (action === "create") {
       const id = "list_" + new Date().getTime()
-      const title = params.title || "Quick List"
+      const rawTitle = params.title || "Quick List"
+      const title = sanitize(rawTitle).substring(0, 50)
       const date = new Date().toISOString()
       
       sheet.appendRow([id, title, "[]", date, 0])
@@ -45,10 +46,12 @@ function handleRequest(e) {
 
     else if (action === "add") {
       const id = params.id
-      const item = params.item
+      const rawItem = params.item
+      const item = sanitize(rawItem).substring(0, 200)
+
       const rowIndex = getRowIndexById(sheet, id)
       
-      if (rowIndex > -1) {
+      if (rowIndex > -1 && item.length > 0) {
         const range = sheet.getRange(rowIndex, 3, 1, 3) 
         const values = range.getValues()[0]
         
@@ -139,4 +142,14 @@ function getRowIndexById(sheet, id) {
     }
   }
   return -1
+}
+
+function sanitize(str) {
+  if (!str) return ""
+  let clean = String(str)
+  
+  if (/^[\=\+\-\@]/.test(clean)) {
+    clean = "'" + clean
+  }
+  return clean
 }
