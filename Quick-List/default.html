@@ -1,6 +1,17 @@
 <div class="container">  
   <h1>Host a list</h1>
-  <button id="createBtn" class="primary-btn">Create</button>
+  
+  <div class="create-controls">
+    
+    <select id="durationSelect" class="dashboard-input duration-select">
+      <option value="24">1 Day</option>
+      <option value="72">3 Days</option>
+      <option value="120">5 Days</option>
+      <option value="168">1 Week</option>
+    </select>
+    
+    <button id="createBtn" class="primary-btn">Create</button>
+  </div>
 </div>
 
 <fieldset class="hidden sessions">
@@ -13,6 +24,7 @@
         <th>List Title</th>
         <th>Status</th>
         <th>Items</th>
+        <th></th> 
       </tr>
     </thead>
     <tbody>

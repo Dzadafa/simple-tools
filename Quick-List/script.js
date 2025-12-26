@@ -17,8 +17,8 @@ const API = {
     }
   },
 
-  async createList(title) {
-    return this._call({ action: "create", title })
+  async createList(title, duration) {
+    return this._call({ action: "create", title, duration })
   },
 
   async getList(id) {
@@ -33,8 +33,8 @@ const API = {
     return this._call({ action: "delete", id, item })
   },
 
-  async stopList(id, adminKey) {
-    return this._call({ action: "stop", id, adminKey })
+  async stopList(id) {
+    return this._call({ action: "stop", id })
   }
 }
 
@@ -78,7 +78,7 @@ async function loadContent() {
 
   if (listData && listData.id) {
     if (isHost) {
-      loadHostView(placeholder, listData, false, hostSession.adminKey)
+      loadHostView(placeholder, listData, false)
     } else {
       loadUserView(placeholder, listData)
     }
@@ -88,6 +88,7 @@ async function loadContent() {
       if (archived) {
         loadHostView(placeholder, archived, true)
       } else {
+        removeFromActive(listId) 
         load404(placeholder)
       }
     } else {
@@ -101,30 +102,33 @@ async function loadDashboard(container) {
   container.innerHTML = await res.text();
   
   const btn = container.querySelector('#createBtn')
+  const select = container.querySelector('#durationSelect')
+  
   const inputObj = document.createElement('input')
   inputObj.type = 'text'
   inputObj.id = 'newTitleInput'
-  inputObj.placeholder = "List Title (e.g. Standup)"
+  inputObj.placeholder = "List Title"
   inputObj.className = "dashboard-input"
   
   if(btn) {
-    btn.parentNode.insertBefore(inputObj, btn)
+    const parent = btn.parentNode
+    parent.insertBefore(inputObj, select)
   
     btn.addEventListener('click', async () => {
       const titleVal = inputObj.value.trim()
       const title = titleVal || "Quick List" 
+      const duration = select.value
       
       btn.innerText = "Creating..."
-      const response = await API.createList(title)
+      const response = await API.createList(title, duration)
       
-      if (response && response.id && response.adminKey) {
+      if (response && response.id) {
         
         const newSession = {
           id: response.id,
           title: title,
-          adminKey: response.adminKey,
           createdAt: new Date().toISOString(),
-          itemsCount: 0 
+          expiry: response.expiry 
         }
 
         const sessions = JSON.parse(localStorage.getItem('active_sessions') || '[]')
@@ -142,7 +146,7 @@ async function loadDashboard(container) {
   renderHistoryTable()
 }
 
-async function loadHostView(container, initialData, isArchived = false, adminKey = null) {
+async function loadHostView(container, initialData, isArchived = false) {
   container.innerHTML = `
     <div class="container">
       <h1>${sanitizeInput(initialData.title)} ${isArchived ? '<span class="badge">Archived</span>' : ''}</h1>
@@ -191,22 +195,21 @@ async function loadHostView(container, initialData, isArchived = false, adminKey
         updateHostDisplay(newData)
       } else {
         stopPolling()
-        alert("This list has been stopped remotely.")
+        removeFromActive(initialData.id) 
+        alert("This list has expired or been stopped.")
         window.location.href = 'index.html'
       }
     })
 
     document.getElementById('stopBtn').addEventListener('click', async () => {
-      if(confirm("Stop this list? It will be deleted from the server and saved to your history.")) {
+      if(confirm("Stop this list? It will be saved to your history.")) {
         stopPolling()
-        const finalData = await API.stopList(initialData.id, adminKey)
+        const finalData = await API.stopList(initialData.id)
         
-        if(finalData && !finalData.error) {
+        if(finalData) {
           saveToHistory(finalData)
           removeFromActive(initialData.id)
           window.location.reload()
-        } else {
-          alert("Error stopping list: " + (finalData?.error || "Unknown error"))
         }
       }
     })
@@ -331,6 +334,15 @@ function removeFromActive(id) {
   localStorage.setItem('active_sessions', JSON.stringify(newSessions))
 }
 
+function deleteHistoryItem(id) {
+  if(confirm("Permanently delete this archived list?")) {
+    const history = JSON.parse(localStorage.getItem('history_lists') || '[]')
+    const newHistory = history.filter(h => h.id !== id)
+    localStorage.setItem('history_lists', JSON.stringify(newHistory))
+    renderHistoryTable()
+  }
+}
+
 function getArchivedList(id) {
   const history = JSON.parse(localStorage.getItem('history_lists') || '[]')
   return history.find(h => h.id === id)
@@ -357,19 +369,25 @@ function renderHistoryTable() {
       <td>${sanitizeInput(s.title)}</td>
       <td><span class="status-badge status-active">Active</span></td>
       <td>-</td>
+      <td></td>
     </tr>
   `).join('')
   
   const archivedRows = history.map(h => `
-    <tr onclick="window.location.href='?id=${h.id}'" style="cursor:pointer">
-      <td>${h.createdAt.split('T')[0]}</td>
-      <td>${sanitizeInput(h.title)}</td>
-      <td><span class="status-badge status-archived">Archived</span></td>
-      <td>${h.items.length}</td>
+    <tr>
+      <td onclick="window.location.href='?id=${h.id}'" style="cursor:pointer">${h.createdAt.split('T')[0]}</td>
+      <td onclick="window.location.href='?id=${h.id}'" style="cursor:pointer">${sanitizeInput(h.title)}</td>
+      <td onclick="window.location.href='?id=${h.id}'" style="cursor:pointer"><span class="status-badge status-archived">Archived</span></td>
+      <td onclick="window.location.href='?id=${h.id}'" style="cursor:pointer">${h.items.length}</td>
+      <td class="action-cell">
+        <button class="delete-history-btn" onclick="deleteHistoryItem('${h.id}')" title="Delete Archive">×</button>
+      </td>
     </tr>
   `).join('')
   
   tbody.innerHTML = activeRows + archivedRows
+  
+  window.deleteHistoryItem = deleteHistoryItem
 }
 
 loadContent()

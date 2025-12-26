@@ -24,20 +24,32 @@ function handleRequest(e) {
       const title = sanitize(rawTitle).substring(0, 50)
       const date = new Date().toISOString()
       
-      sheet.appendRow([id, title, "[]", date, 0])
-      result = { id: id }
+      const durationHours = parseInt(params.duration) || 24
+      const expiryDate = new Date(new Date().getTime() + (durationHours * 60 * 60 * 1000)).toISOString()
+      
+      sheet.appendRow([id, title, "[]", date, 0, expiryDate])
+      result = { id: id, expiry: expiryDate }
     } 
     
     else if (action === "get") {
       const id = params.id
-      const data = getRowById(sheet, id)
-      if (data) {
-        result = {
-          id: data[0],
-          title: data[1],
-          items: JSON.parse(data[2]),
-          createdAt: data[3],
-          participants: data[4]
+      const rowIndex = getRowIndexById(sheet, id)
+      
+      if (rowIndex > -1) {
+        const rowData = sheet.getRange(rowIndex, 1, 1, 6).getValues()[0]
+        const expiryStr = rowData[5]
+        
+        if (expiryStr && new Date() > new Date(expiryStr)) {
+          sheet.deleteRow(rowIndex)
+          result = null 
+        } else {
+          result = {
+            id: rowData[0],
+            title: rowData[1],
+            items: JSON.parse(rowData[2]),
+            createdAt: rowData[3],
+            participants: rowData[4]
+          }
         }
       } else {
         result = null
@@ -97,7 +109,7 @@ function handleRequest(e) {
       const rowIndex = getRowIndexById(sheet, id)
       
       if (rowIndex > -1) {
-        const rowValues = sheet.getRange(rowIndex, 1, 1, 5).getValues()[0]
+        const rowValues = sheet.getRange(rowIndex, 1, 1, 6).getValues()[0]
         
         result = {
           id: rowValues[0],
@@ -124,16 +136,6 @@ function handleRequest(e) {
   }
 }
 
-function getRowById(sheet, id) {
-  const data = sheet.getDataRange().getValues()
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][0] == id) {
-      return data[i]
-    }
-  }
-  return null
-}
-
 function getRowIndexById(sheet, id) {
   const data = sheet.getDataRange().getValues()
   for (let i = 1; i < data.length; i++) {
@@ -147,7 +149,6 @@ function getRowIndexById(sheet, id) {
 function sanitize(str) {
   if (!str) return ""
   let clean = String(str)
-  
   if (/^[\=\+\-\@]/.test(clean)) {
     clean = "'" + clean
   }
