@@ -41,8 +41,9 @@ body{
   background-color: var(--neutral-100);
   color: var(--neutral-800);
   margin: 0 auto;
-  padding: 0px;
-  max-width: 800px;
+  padding: 10px 20px;
+  max-width: 100dvw;
+  overflow-x: hidden;
 }
 
 footer {
