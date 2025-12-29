@@ -140,16 +140,9 @@ async function loadDashboard(container) {
 
   const btn = container.querySelector('#createBtn')
   const select = container.querySelector('#durationSelect')
+  const inputObj = container.querySelector('#newTitleInput') 
 
-  const inputObj = document.createElement('input')
-  inputObj.type = 'text'
-  inputObj.id = 'newTitleInput'
-  inputObj.placeholder = "List Title"
-  inputObj.className = "dashboard-input"
-
-  if(btn) {
-    const parent = btn.parentNode
-    parent.insertBefore(inputObj, select)
+  if(btn && inputObj) {
 
     btn.addEventListener('click', async () => {
       const titleVal = inputObj.value.trim()
@@ -190,56 +183,34 @@ async function loadHostView(container, initialData, isArchived = false) {
   if (!isArchived && initialData.isExpired) {
     isStopping = true
     saveToHistory(initialData) 
-
     removeFromActive(initialData.id)
     API.stopList(initialData.id) 
-
     window.location.href = 'index.html' 
-
     return
   }
 
-  container.innerHTML = `
-    <div class="container">
-      <h1>${sanitizeInput(initialData.title)} ${isArchived ? '<span class="badge">Archived</span>' : ''}</h1>
+  const res = await fetch('./host.html');
+  container.innerHTML = await res.text();
 
-      ${!isArchived ? `
-        <div style="margin-bottom: 20px; display:flex; gap:10px; flex-direction:column; align-items:center;">
-          <a href="?id=${initialData.id}&view=guest" target="_blank" style="color: var(--accent-blue-600); font-weight:bold; font-size: 0.9em;">Open Guest View (New Tab)</a>
-          <button class="stop-btn" id="stopBtn">Stop & Archive</button>
-        </div>
-      ` : ''}
+  container.querySelector('#listTitle').innerHTML = sanitizeInput(initialData.title);
 
-      <div class="list-display">
-        <h3 id="listHeader">${isArchived ? 'Final List:' : 'Live List:'}</h3>
-        <textarea readonly id="copyTarget" class="copy-area" title="Click to Copy"></textarea>
-      </div>
+  if (isArchived) {
+    container.querySelector('#archiveBadge').style.display = 'inline-block';
+    container.querySelector('#hostControls').style.display = 'none'; 
 
-      <button class="secondary-btn" onclick="window.location.href='index.html'">Back to Dashboard</button>
-    </div>
-  `
+    container.querySelector('#listHeader').innerText = 'Final List:';
+  } else {
+    container.querySelector('#guestLink').href = `?id=${initialData.id}&view=guest`;
+  }
 
   updateHostDisplay(initialData)
 
   const copyArea = document.getElementById('copyTarget')
   const header = document.getElementById('listHeader')
-
-  if(copyArea) {
-    copyArea.style.cursor = "pointer"
-    copyArea.addEventListener('click', () => {
-      copyArea.select()
-      navigator.clipboard.writeText(copyArea.value).then(() => {
-        const originalText = header.innerText
-        header.innerText = "Copied!"
-        header.style.color = "var(--brand-green)"
-
-        setTimeout(() => {
-          header.innerText = originalText
-          header.style.color = ""
-        }, 1500)
-      })
-    })
-  }
+  const linkField = document.getElementById('linkField')
+  const urlHeader = document.getElementById('urlHeader')
+  setupCopyOnClick(copyArea, header)
+  setupCopyOnClick(linkField, urlHeader)
 
   if(!isArchived) {
     startPolling(initialData.id, (newData) => {
@@ -268,33 +239,35 @@ async function loadHostView(container, initialData, isArchived = false) {
       }
     })
 
-    document.getElementById('stopBtn').addEventListener('click', async () => {
-      if(confirm("Stop this list? It will be archived.")) {
-        isStopping = true
-        stopPolling()
+    const stopBtn = document.getElementById('stopBtn')
+    if(stopBtn) {
+      stopBtn.addEventListener('click', async () => {
+        if(confirm("Stop this list? It will be archived.")) {
+          isStopping = true
+          stopPolling()
 
-        const btn = document.getElementById('stopBtn')
-        btn.innerText = "Archiving..."
-        btn.disabled = true
+          stopBtn.innerText = "Archiving..."
+          stopBtn.disabled = true
 
-        const archiveObj = {
-          id: initialData.id,
-          title: currentData.title || initialData.title || "Untitled",
-          items: Array.isArray(currentData.items) ? currentData.items : [],
-          createdAt: initialData.createdAt || new Date().toISOString(),
-          participants: currentData.participants || 0
+          const archiveObj = {
+            id: initialData.id,
+            title: currentData.title || initialData.title || "Untitled",
+            items: Array.isArray(currentData.items) ? currentData.items : [],
+            createdAt: initialData.createdAt || new Date().toISOString(),
+            participants: currentData.participants || 0
+          }
+
+          saveToHistory(archiveObj)
+          removeFromActive(initialData.id)
+
+          await API.stopList(initialData.id)
+
+          setTimeout(() => {
+            window.location.href = 'index.html'
+          }, 100)
         }
-
-        saveToHistory(archiveObj)
-        removeFromActive(initialData.id)
-
-        await API.stopList(initialData.id)
-
-        setTimeout(() => {
-          window.location.href = 'index.html'
-        }, 100)
-      }
-    })
+      })
+    }
   }
 }
 
@@ -312,6 +285,7 @@ async function loadUserView(container, listData) {
 
   const form = container.querySelector('#addForm')
   const input = container.querySelector('#itemInput')
+  const btn = form.querySelector('button')
   const myItemsList = container.querySelector('#myItems')
 
   let myItems = getSafeJson(`my_items_${listData.id}`)
@@ -330,13 +304,22 @@ async function loadUserView(container, listData) {
     if(!val) return
 
     input.disabled = true
+    btn.disabled = true
+    const originalText = btn.innerText
+    btn.innerText = "Adding..."
+
     const success = await API.addItem(listData.id, val)
+
     input.disabled = false
+    btn.disabled = false
+    btn.innerText = originalText
     input.focus()
 
     if (success) {
       myItems.push(val)
-      sessionStorage.setItem(`my_items_${listData.id}`, JSON.stringify(myItems))
+
+      localStorage.setItem(`my_items_${listData.id}`, JSON.stringify(myItems))
+
       renderUserItems(myItems, myItemsList, listData.id)
       input.value = ''
     } else {
@@ -362,8 +345,29 @@ function stopPolling() {
   if(pollTimer) clearInterval(pollTimer)
 }
 
+function setupCopyOnClick(inputEl, headerEl, successText = "Copied!") {
+  if (!inputEl) return
+
+  inputEl.style.cursor = "pointer"
+  inputEl.addEventListener("click", () => {
+    inputEl.select()
+    navigator.clipboard.writeText(inputEl.value).then(() => {
+      const original = headerEl.innerText
+      headerEl.innerText = successText
+      headerEl.style.color = "var(--brand-green)"
+
+      setTimeout(() => {
+        headerEl.innerText = original
+        headerEl.style.color = ""
+      }, 1500)
+    })
+  })
+}
+
 function updateHostDisplay(data) {
   const textarea = document.getElementById('copyTarget')
+  const linkArea = document.getElementById('linkField')
+  const pageUrl = window.location.href
   if(!textarea) return
 
   let text = `${sanitizeInput(data.title)}\n`
@@ -375,6 +379,7 @@ function updateHostDisplay(data) {
 
   if (document.activeElement !== textarea) {
     textarea.value = text
+    linkArea.value = pageUrl
   }
 
   const activeSessions = getSafeJson('active_sessions')
@@ -389,6 +394,15 @@ function updateHostDisplay(data) {
 function renderUserItems(items, ul, listId) {
   ul.innerHTML = ''
 
+  const wrapper = ul.closest('.user-list-wrapper')
+  if (wrapper) {
+    if (items.length > 0) {
+      wrapper.classList.remove('hidden')
+    } else {
+      wrapper.classList.add('hidden')
+    }
+  }
+
   items.forEach((item, idx) => {
     const li = document.createElement('li')
     li.innerHTML = `
@@ -401,7 +415,8 @@ function renderUserItems(items, ul, listId) {
         await API.deleteItem(listId, item)
 
         items.splice(idx, 1) 
-        sessionStorage.setItem(`my_items_${listId}`, JSON.stringify(items))
+
+        localStorage.setItem(`my_items_${listId}`, JSON.stringify(items))
 
         renderUserItems(items, ul, listId)
       }

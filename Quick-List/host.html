@@ -1,0 +1,20 @@
+<div class="container">
+  <h1>
+    <span id="listTitle"></span> 
+    <span id="archiveBadge" class="badge" style="display: none;">Archived</span>
+  </h1>
+  
+  <div id="hostControls" style="margin-bottom: 20px; display:flex; gap:10px; flex-direction:column; align-items:center;">
+    <a id="guestLink" href="#" target="_blank" style="color: var(--accent-blue-600); font-weight:bold; font-size: 0.9em;">Open Guest View (New Tab)</a>
+    <button class="stop-btn" id="stopBtn">Stop & Archive</button>
+  </div>
+  
+  <div class="list-display">
+    <h3 id="urlHeader">List URL:</h3>
+    <textarea readonly rows="1" id="linkField" class="link-field" title="Click to Copy"></textarea>
+    <h3 id="listHeader">Live List:</h3>
+    <textarea readonly id="copyTarget" class="copy-area" title="Click to Copy"></textarea>
+  </div>
+  
+  <button class="secondary-btn" onclick="window.location.href='index.html'">Back to Dashboard</button>
+</div>

@@ -3,12 +3,16 @@
   
   <div class="create-controls">
     
-    <select id="durationSelect" class="dashboard-input duration-select">
-      <option value="24">1 Day</option>
-      <option value="72">3 Days</option>
-      <option value="120">5 Days</option>
-      <option value="168">1 Week</option>
-    </select>
+    <fieldset class="inputs">
+      <input type="text" id="newTitleInput" placeholder="List Title" class="dashboard-input">
+
+      <select id="durationSelect" class="dashboard-input duration-select">
+        <option value="24">1 Day</option>
+        <option value="72">3 Days</option>
+        <option value="120">5 Days</option>
+        <option value="168">1 Week</option>
+      </select>
+    </fieldset>
     
     <button id="createBtn" class="primary-btn">Create</button>
   </div>
@@ -23,7 +27,7 @@
         <th>Date</th>
         <th>List Title</th>
         <th>Status</th>
-        <th>Items</th>
+        <th>Total</th>
         <th></th> 
       </tr>
     </thead>
