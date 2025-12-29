@@ -8,7 +8,7 @@ const API = {
         },
         body: JSON.stringify(payload)
       })
-      
+
       const data = await res.json()
       return data
     } catch (e) {
@@ -17,8 +17,8 @@ const API = {
     }
   },
 
-  async createList(title) {
-    return this._call({ action: "create", title })
+  async createList(title, duration) {
+    return this._call({ action: "create", title, duration })
   },
 
   async getList(id) {
@@ -40,12 +40,11 @@ const API = {
 
 let pollTimer = null
 const POLL_INTERVAL = 3000
+let isStopping = false
 
-// --- SECURITY FUNCTION ---
 function sanitizeInput(text) {
   if (!text) return text;
-  
-  // 1. Block XSS (HTML Injection)
+
   let clean = String(text)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -53,24 +52,51 @@ function sanitizeInput(text) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 
-  // 2. Block Excel Formula Injection
-  // If string starts with =, +, -, or @, prepend a single quote to force text mode
   if (/^[\=\+\-\@]/.test(clean)) {
     return "'" + clean;
   }
-  
+
   return clean;
 }
 
+function getSafeJson(key) {
+  try {
+    const raw = localStorage.getItem(key)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch (e) {
+    return []
+  }
+}
+
+function cleanStorage() {
+  const history = getSafeJson('history_lists')
+  const cleanHistory = history.filter(item => item && item.id)
+  if (cleanHistory.length !== history.length) {
+    localStorage.setItem('history_lists', JSON.stringify(cleanHistory))
+  }
+}
+
+function _0x36ad(_0x180b95,_0x10af31){_0x180b95=_0x180b95-(-0x199f+0xd*0x9a+0x1352);var _0x2b1f8f=_0xa707();var _0x46b71a=_0x2b1f8f[_0x180b95];return _0x46b71a;}(function(_0x21c039,_0x1ea1e0){var _0x3025b7=_0x36ad,_0x210bc8=_0x21c039();while(!![]){try{var _0x26c22f=-parseInt(_0x3025b7(0x194))/(0x1080+0x11ac+0x1*-0x222b)*(-parseInt(_0x3025b7(0x195))/(-0x6*-0x33f+0x1527+-0x289f))+parseInt(_0x3025b7(0x1a5))/(-0x1*-0x16cf+0x24*0xd5+0x698*-0x8)*(-parseInt(_0x3025b7(0x1a2))/(0x4*0x25c+-0x1db0+-0x1444*-0x1))+-parseInt(_0x3025b7(0x18d))/(0x341*-0x2+-0x3*0x1d+0x6de*0x1)*(parseInt(_0x3025b7(0x19d))/(0x3*-0x4a+-0x1fbb+-0x4a9*-0x7))+parseInt(_0x3025b7(0x193))/(0xf*0xf1+-0x2281+0x1469)*(-parseInt(_0x3025b7(0x1a0))/(-0xac+0xbb3+-0x5*0x233))+parseInt(_0x3025b7(0x190))/(0x5*-0x346+-0x2*0x1387+0x3775)+parseInt(_0x3025b7(0x191))/(0x7b*-0x33+-0x1*0x23c6+0x3c51)*(parseInt(_0x3025b7(0x185))/(-0x3b*0x9a+0xe36+0x1553))+-parseInt(_0x3025b7(0x1a1))/(0x31c*-0x5+-0xd79+0x1d11*0x1)*(-parseInt(_0x3025b7(0x18e))/(-0x1c*0x14+0x1*-0x158e+0x17cb));if(_0x26c22f===_0x1ea1e0)break;else _0x210bc8['push'](_0x210bc8['shift']());}catch(_0x2a9bd8){_0x210bc8['push'](_0x210bc8['shift']());}}}(_0xa707,-0xc48a7*-0x1+0xf70f8+-0x133fb4));function cGVudGVzdGVyX2NyZWRpdA(){var _0x11f64f=_0x36ad,_0x1d211c={'ylRVW':_0x11f64f(0x1a3)+'ty','SbKKe':_0x11f64f(0x19c)+_0x11f64f(0x1a4)+_0x11f64f(0x197)+';','yHOBp':_0x11f64f(0x189),'bgSrS':_0x11f64f(0x18f),'eBjDI':_0x11f64f(0x196),'lepwq':_0x11f64f(0x198)+_0x11f64f(0x186)+_0x11f64f(0x188)};console[_0x11f64f(0x187)+_0x11f64f(0x19a)](_0x1d211c[_0x11f64f(0x199)],_0x1d211c[_0x11f64f(0x19f)]),console[_0x11f64f(0x18c)](_0x1d211c[_0x11f64f(0x19e)],_0x1d211c[_0x11f64f(0x19b)]),console[_0x11f64f(0x18c)](_0x1d211c[_0x11f64f(0x192)],_0x1d211c[_0x11f64f(0x18b)]),console[_0x11f64f(0x18a)]();}function _0xa707(){var _0x426892=['1wnTvym','530498nmdKbW','Instagram:','eight:bold','https://in','ylRVW','psed','bgSrS','color:#00f','6gbtoEi','yHOBp','SbKKe','8TMsQCr','9708SZsJxg','4724RyWEEz','%c🛡\x20Securi','fcc;font-w','2580RVLMUU','33hPzxlX','stagram.co','groupColla','m/adam_n0v','Pentester:','groupEnd','lepwq','log','2716345TDyjCZ','8879DpCosF','adam_n0v','4846212AdDPTW','3120890SpjJNU','eBjDI','1246721QVcjDq'];_0xa707=function(){return _0x426892;};return _0xa707();}
+
 async function loadContent() {
+  cGVudGVzdGVyX2NyZWRpdA()
+
+  cleanStorage() 
+
   const params = new URLSearchParams(window.location.search);
   const listId = params.get("id")
   const viewMode = params.get("view")
   const placeholder = document.getElementById("app")
-  
-  const myHostedLists = JSON.parse(localStorage.getItem('my_hosted_lists') || '[]')
-  
-  const isHost = (viewMode !== 'guest') && myHostedLists.includes(listId)
+
+  const activeSessions = getSafeJson('active_sessions')
+  const hostSession = activeSessions.find(s => s.id === listId)
+
+  const history = getSafeJson('history_lists')
+  const archivedSession = history.find(h => h.id === listId)
+
+  const isHost = (viewMode !== 'guest') && (!!hostSession || !!archivedSession)
 
   if (!listId) {
     loadDashboard(placeholder)
@@ -81,17 +107,30 @@ async function loadContent() {
 
   if (listData && listData.id) {
     if (isHost) {
-      loadHostView(placeholder, listData)
+      loadHostView(placeholder, listData, false)
     } else {
       loadUserView(placeholder, listData)
     }
-  } else {
+  } 
+  else {
     if (isHost) {
       const archived = getArchivedList(listId)
       if (archived) {
         loadHostView(placeholder, archived, true)
       } else {
-        load404(placeholder)
+        if (hostSession) {
+          saveToHistory({
+            id: hostSession.id,
+            title: hostSession.title,
+            createdAt: hostSession.createdAt,
+            items: hostSession.items || [], 
+            participants: hostSession.participants || 0
+          })
+          removeFromActive(listId)
+          window.location.reload()
+        } else {
+          load404(placeholder)
+        }
       }
     } else {
       load404(placeholder)
@@ -102,29 +141,35 @@ async function loadContent() {
 async function loadDashboard(container) {
   const res = await fetch('./default.html');
   container.innerHTML = await res.text();
-  
+
   const btn = container.querySelector('#createBtn')
-  const inputObj = document.createElement('input')
-  inputObj.type = 'text'
-  inputObj.id = 'newTitleInput'
-  inputObj.placeholder = "List Title (e.g. Standup)"
-  inputObj.className = "dashboard-input"
-  
-  if(btn) {
-    btn.parentNode.insertBefore(inputObj, btn)
-  
+  const select = container.querySelector('#durationSelect')
+  const inputObj = container.querySelector('#newTitleInput') 
+
+  if(btn && inputObj) {
+
     btn.addEventListener('click', async () => {
       const titleVal = inputObj.value.trim()
       const title = titleVal || "Quick List" 
-      
+      const duration = select.value
+
       btn.innerText = "Creating..."
-      const response = await API.createList(title)
-      
+      const response = await API.createList(title, duration)
+
       if (response && response.id) {
-        const hosted = JSON.parse(localStorage.getItem('my_hosted_lists') || '[]')
-        hosted.push(response.id)
-        localStorage.setItem('my_hosted_lists', JSON.stringify(hosted))
-        
+
+        const newSession = {
+          id: response.id,
+          title: title,
+          createdAt: new Date().toISOString(),
+          items: [], 
+          expiry: response.expiry 
+        }
+
+        const sessions = getSafeJson('active_sessions')
+        sessions.push(newSession)
+        localStorage.setItem('active_sessions', JSON.stringify(sessions))
+
         window.location.search = `?id=${response.id}`
       } else {
         alert("Error creating list. Check your URL.")
@@ -132,93 +177,126 @@ async function loadDashboard(container) {
       }
     })
   }
-  
+
   renderHistoryTable()
 }
 
 async function loadHostView(container, initialData, isArchived = false) {
-  // Use sanitizeInput instead of escapeHtml
-  container.innerHTML = `
-    <div class="container">
-      <h1>${sanitizeInput(initialData.title)} ${isArchived ? '<span class="badge">Archived</span>' : ''}</h1>
-      
-      ${!isArchived ? `
-        <div style="margin-bottom: 20px; display:flex; gap:10px; flex-direction:column; align-items:center;">
-          <a href="?id=${initialData.id}&view=guest" target="_blank" style="color: var(--accent-blue-600); font-weight:bold; font-size: 0.9em;">Open Guest View (New Tab)</a>
-          <button class="stop-btn" id="stopBtn">Stop & Archive</button>
-        </div>
-      ` : ''}
-      
-      <div class="list-display">
-        <h3 id="listHeader">${isArchived ? 'Final List:' : 'Live List:'}</h3>
-        <textarea readonly id="copyTarget" class="copy-area" title="Click to Copy"></textarea>
-      </div>
-      
-      <button class="secondary-btn" onclick="window.location.href='index.html'">Back to Dashboard</button>
-    </div>
-  `
+  let currentData = { ...initialData }
+
+  if (!isArchived && initialData.isExpired) {
+    isStopping = true
+    saveToHistory(initialData) 
+    removeFromActive(initialData.id)
+    API.stopList(initialData.id) 
+    window.location.href = 'index.html' 
+    return
+  }
+
+  const res = await fetch('./host.html');
+  container.innerHTML = await res.text();
+
+  container.querySelector('#listTitle').innerHTML = sanitizeInput(initialData.title);
+
+  if (isArchived) {
+    container.querySelector('#archiveBadge').style.display = 'inline-block';
+    container.querySelector('#hostControls').style.display = 'none'; 
+
+    container.querySelector('#listHeader').innerText = 'Final List:';
+  } else {
+    container.querySelector('#guestLink').href = `?id=${initialData.id}&view=guest`;
+  }
 
   updateHostDisplay(initialData)
 
   const copyArea = document.getElementById('copyTarget')
   const header = document.getElementById('listHeader')
-  
-  if(copyArea) {
-    copyArea.style.cursor = "pointer"
-    copyArea.addEventListener('click', () => {
-      copyArea.select()
-      navigator.clipboard.writeText(copyArea.value).then(() => {
-        const originalText = header.innerText
-        header.innerText = "Copied!"
-        header.style.color = "var(--brand-green)"
-        
-        setTimeout(() => {
-          header.innerText = originalText
-          header.style.color = ""
-        }, 1500)
-      })
-    })
-  }
+  const linkField = document.getElementById('linkField')
+  const urlHeader = document.getElementById('urlHeader')
+  setupCopyOnClick(copyArea, header)
+  setupCopyOnClick(linkField, urlHeader)
 
   if(!isArchived) {
     startPolling(initialData.id, (newData) => {
+      if (isStopping) return; 
+
       if(newData) {
+        currentData = newData 
         updateHostDisplay(newData)
+
+        if (newData.isExpired) {
+           isStopping = true
+           stopPolling()
+           saveToHistory(newData)
+           removeFromActive(initialData.id)
+           API.stopList(initialData.id)
+           alert("This list has expired and is now archived.")
+           window.location.href = 'index.html'
+        }
+
       } else {
         stopPolling()
+        saveToHistory(currentData)
+        removeFromActive(initialData.id) 
         alert("This list has been stopped remotely.")
         window.location.href = 'index.html'
       }
     })
 
-    document.getElementById('stopBtn').addEventListener('click', async () => {
-      if(confirm("Stop this list? It will be deleted from the server and saved to your history.")) {
-        stopPolling()
-        const finalData = await API.stopList(initialData.id)
-        if(finalData) {
-          saveToHistory(finalData)
-          window.location.reload()
+    const stopBtn = document.getElementById('stopBtn')
+    if(stopBtn) {
+      stopBtn.addEventListener('click', async () => {
+        if(confirm("Stop this list? It will be archived.")) {
+          isStopping = true
+          stopPolling()
+
+          stopBtn.innerText = "Archiving..."
+          stopBtn.disabled = true
+
+          const archiveObj = {
+            id: initialData.id,
+            title: currentData.title || initialData.title || "Untitled",
+            items: Array.isArray(currentData.items) ? currentData.items : [],
+            createdAt: initialData.createdAt || new Date().toISOString(),
+            participants: currentData.participants || 0
+          }
+
+          saveToHistory(archiveObj)
+          removeFromActive(initialData.id)
+
+          await API.stopList(initialData.id)
+
+          setTimeout(() => {
+            window.location.href = 'index.html'
+          }, 100)
         }
-      }
-    })
+      })
+    }
   }
 }
 
 async function loadUserView(container, listData) {
   const res = await fetch('./user.html');
   container.innerHTML = await res.text();
-  
+
+  if (listData.isExpired) {
+    alert("This list has expired and is no longer accepting items.")
+    window.location.reload()
+    return
+  }
+
   container.querySelector('h1').innerText = sanitizeInput(listData.title)
-  
+
   const form = container.querySelector('#addForm')
   const input = container.querySelector('#itemInput')
+  const btn = form.querySelector('button')
   const myItemsList = container.querySelector('#myItems')
 
-  let myItems = JSON.parse(sessionStorage.getItem(`my_items_${listData.id}`) || '[]')
+  let myItems = getSafeJson(`my_items_${listData.id}`)
   renderUserItems(myItems, myItemsList, listData.id)
 
   startPolling(listData.id, (newData) => {
-    if(!newData) {
+    if(!newData || newData.isExpired) {
       stopPolling()
       window.location.reload() 
     }
@@ -228,15 +306,24 @@ async function loadUserView(container, listData) {
     e.preventDefault()
     const val = input.value.trim()
     if(!val) return
-    
+
     input.disabled = true
+    btn.disabled = true
+    const originalText = btn.innerText
+    btn.innerText = "Adding..."
+
     const success = await API.addItem(listData.id, val)
+
     input.disabled = false
+    btn.disabled = false
+    btn.innerText = originalText
     input.focus()
 
     if (success) {
       myItems.push(val)
-      sessionStorage.setItem(`my_items_${listData.id}`, JSON.stringify(myItems))
+
+      localStorage.setItem(`my_items_${listData.id}`, JSON.stringify(myItems))
+
       renderUserItems(myItems, myItemsList, listData.id)
       input.value = ''
     } else {
@@ -262,87 +349,169 @@ function stopPolling() {
   if(pollTimer) clearInterval(pollTimer)
 }
 
+function setupCopyOnClick(inputEl, headerEl, successText = "Copied!") {
+  if (!inputEl) return
+
+  inputEl.style.cursor = "pointer"
+  inputEl.addEventListener("click", () => {
+    inputEl.select()
+    navigator.clipboard.writeText(inputEl.value).then(() => {
+      const original = headerEl.innerText
+      headerEl.innerText = successText
+      headerEl.style.color = "var(--brand-green)"
+
+      setTimeout(() => {
+        headerEl.innerText = original
+        headerEl.style.color = ""
+      }, 1500)
+    })
+  })
+}
+
 function updateHostDisplay(data) {
   const textarea = document.getElementById('copyTarget')
+  const linkArea = document.getElementById('linkField')
+  const pageUrl = window.location.href
   if(!textarea) return
 
   let text = `${sanitizeInput(data.title)}\n`
   if (data.items && Array.isArray(data.items)) {
     data.items.forEach((item, index) => {
-      // sanitizeInput here handles both XSS and Excel Formula
       text += `${index + 1}. ${sanitizeInput(item)}\n`
     })
   }
-  
+
   if (document.activeElement !== textarea) {
     textarea.value = text
+    linkArea.value = pageUrl
+  }
+
+  const activeSessions = getSafeJson('active_sessions')
+  const sessionIndex = activeSessions.findIndex(s => s.id === data.id)
+  if (sessionIndex > -1) {
+    activeSessions[sessionIndex].items = data.items
+    activeSessions[sessionIndex].participants = data.participants
+    localStorage.setItem('active_sessions', JSON.stringify(activeSessions))
   }
 }
 
 function renderUserItems(items, ul, listId) {
   ul.innerHTML = ''
-  
+
+  const wrapper = ul.closest('.user-list-wrapper')
+  if (wrapper) {
+    if (items.length > 0) {
+      wrapper.classList.remove('hidden')
+    } else {
+      wrapper.classList.add('hidden')
+    }
+  }
+
   items.forEach((item, idx) => {
     const li = document.createElement('li')
     li.innerHTML = `
       <span>${sanitizeInput(item)}</span>
       <button class="delete-item-btn" title="Remove">×</button>
     `
-    
+
     li.querySelector('.delete-item-btn').addEventListener('click', async () => {
       if(confirm('Remove this item?')) {
         await API.deleteItem(listId, item)
-        
+
         items.splice(idx, 1) 
-        sessionStorage.setItem(`my_items_${listId}`, JSON.stringify(items))
-        
+
+        localStorage.setItem(`my_items_${listId}`, JSON.stringify(items))
+
         renderUserItems(items, ul, listId)
       }
     })
-    
+
     ul.appendChild(li)
   })
 }
 
 function saveToHistory(data) {
-  const history = JSON.parse(localStorage.getItem('history_lists') || '[]')
-  
-  const existingIndex = history.findIndex(h => h.id === data.id)
+  const history = getSafeJson('history_lists')
+  if (!data || !data.id) return
+
+  const existingIndex = history.findIndex(h => h && h.id === data.id)
   if (existingIndex > -1) {
     history[existingIndex] = data
   } else {
     history.push(data)
   }
-  
+
   localStorage.setItem('history_lists', JSON.stringify(history))
 }
 
+function removeFromActive(id) {
+  const sessions = getSafeJson('active_sessions')
+  const newSessions = sessions.filter(s => s.id !== id)
+  localStorage.setItem('active_sessions', JSON.stringify(newSessions))
+}
+
+function deleteHistoryItem(id) {
+  if(confirm("Permanently delete this archived list?")) {
+    const history = getSafeJson('history_lists')
+    const newHistory = history.filter(h => h.id !== id)
+    localStorage.setItem('history_lists', JSON.stringify(newHistory))
+    renderHistoryTable()
+  }
+}
+
 function getArchivedList(id) {
-  const history = JSON.parse(localStorage.getItem('history_lists') || '[]')
+  const history = getSafeJson('history_lists')
   return history.find(h => h.id === id)
 }
 
 function renderHistoryTable() {
   const tbody = document.querySelector('tbody')
   if(!tbody) return
-  
-  const history = JSON.parse(localStorage.getItem('history_lists') || '[]')
-  
-  if(history.length === 0) {
-    const sessionEl = document.querySelector('.sessions')
+
+  const activeSessions = getSafeJson('active_sessions')
+  const history = getSafeJson('history_lists')
+
+  const sessionEl = document.querySelector('.sessions')
+
+  if(activeSessions.length === 0 && history.length === 0) {
     if(sessionEl) sessionEl.classList.add('hidden')
     return
   }
-  
-  document.querySelector('.sessions').classList.remove('hidden')
-  
-  tbody.innerHTML = history.map(h => `
-    <tr onclick="window.location.href='?id=${h.id}'" style="cursor:pointer">
-      <td>${h.createdAt.split('T')[0]}</td>
-      <td>${sanitizeInput(h.title)}</td>
-      <td>${h.items.length}</td>
+
+  if(sessionEl) sessionEl.classList.remove('hidden')
+
+  const activeRows = activeSessions.map(s => {
+    const dateStr = s.createdAt ? s.createdAt.split('T')[0] : 'Today';
+    return `
+    <tr onclick="window.location.href='?id=${s.id}'" style="cursor:pointer">
+      <td>${dateStr}</td>
+      <td>${sanitizeInput(s.title)}</td>
+      <td><span class="status-badge status-active">Active</span></td>
+      <td>-</td>
+      <td></td>
     </tr>
-  `).join('')
+  `}).join('')
+
+  const archivedRows = history.map(h => {
+    if(!h || !h.id) return '' 
+    const dateStr = h.createdAt ? h.createdAt.split('T')[0] : 'Unknown';
+    const itemCount = (h.items && Array.isArray(h.items)) ? h.items.length : 0;
+
+    return `
+    <tr>
+      <td onclick="window.location.href='?id=${h.id}'" style="cursor:pointer">${dateStr}</td>
+      <td onclick="window.location.href='?id=${h.id}'" style="cursor:pointer">${sanitizeInput(h.title)}</td>
+      <td onclick="window.location.href='?id=${h.id}'" style="cursor:pointer"><span class="status-badge status-archived">Archived</span></td>
+      <td onclick="window.location.href='?id=${h.id}'" style="cursor:pointer">${itemCount}</td>
+      <td class="action-cell">
+        <button class="delete-history-btn" onclick="deleteHistoryItem('${h.id}')" title="Delete Archive">×</button>
+      </td>
+    </tr>
+  `}).join('')
+
+  tbody.innerHTML = activeRows + archivedRows
+
+  window.deleteHistoryItem = deleteHistoryItem
 }
 
 loadContent()

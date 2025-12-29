@@ -41,8 +41,30 @@ body{
   background-color: var(--neutral-100);
   color: var(--neutral-800);
   margin: 0 auto;
-  padding: 20px;
+  padding: 0px;
   max-width: 800px;
+}
+
+footer {
+  width: 100%;
+  text-align: center;
+  margin: 30px 0 20px 0;
+  color: var(--neutral-800)
+}
+
+footer i {
+  margin: 0 0 10px 0;
+}
+
+footer a {
+  padding: 10px 5px;
+  color: var(--neutral-800);
+  font-weight: bold;
+  font-family: var(--nunito);
+}
+
+footer a:hover{
+  text-decoration: none;
 }
 
 div.container {
@@ -54,6 +76,15 @@ div.container {
   gap: 1em;
   margin-bottom: 3em;
   text-align: center;
+}
+
+div.container.user{
+  height: 100dvh;
+  margin: 0;
+}
+
+div.container.err404 button{
+  max-width: 300px;
 }
 
 body:has(fieldset.hidden) .container {
@@ -71,12 +102,12 @@ h1, h2, h3 {
 button.primary-btn{
   all: unset;
   display: flex;
-  width: fit-content;
+  width: 100%;
   align-items: center;
   justify-content: center;
   font-weight: 800;
   font-size: 1.1rem;
-  color: var(--neutral-100);
+  color: var(--neutral-200);
   background-color: var(--accent-blue-600);
   border-radius: .5em;
   padding: 10px 30px;
@@ -117,25 +148,48 @@ button.secondary-btn {
   font-size: 0.9rem;
 }
 
-input[type="text"] {
+input[type="text"],
+select {
   font-family: var(--nunito);
   padding: 12px;
-  border-radius: .8em;
-  border: 3px solid var(--neutral-400);
+  border-radius: 8px;
+  border: 2px solid var(--neutral-400);
   font-size: 1rem;
   width: 100%;
   box-sizing: border-box;
+  background-color: var(--neutral-100);
+  color: var(--neutral-800);
+}
+
+input[type="text"]:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent-blue-600);
 }
 
 input.dashboard-input {
-  max-width: 300px;
+  /* max-width: 300px; */
   text-align: center;
-  border: 3px solid var(--neutral-400);
+  border: 2px solid var(--accent-blue-300);
 }
 
-input[type="text"]:focus {
-  outline: none;
-  border-color: var(--accent-blue-600);
+select.dashboard-input {
+  border: 2px solid var(--accent-blue-300);
+}
+
+.duration-select {
+  width: auto;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 35px;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2329b6f6%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px top 50%;
+  background-size: 12px auto;
+  font-weight: 600;
+  color: var(--accent-blue-700);
 }
 
 textarea.copy-area {
@@ -154,8 +208,32 @@ textarea.copy-area {
   box-sizing: border-box;
 }
 
+textarea::-webkit-scrollbar {
+  display: none;
+}
+
 textarea.copy-area:focus {
   outline: 2px solid var(--accent-blue-600);
+  border-color: transparent;
+}
+
+textarea.link-field {
+  resize: none;
+  font-size: 1rem;
+  border: 2px dashed var(--neutral-400);
+  background-color: var(--neutral-200);
+  font-family: var(--poppins);
+  border-radius: 10px;
+  padding: 10px 12px;
+  width: 100%;
+  min-width: 300px;
+  white-space: nowrap;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+textarea.link-field:focus {
+  outline: 2px solid var(--primary-green-700);
   border-color: transparent;
 }
 
@@ -165,6 +243,15 @@ fieldset {
   padding: 20px 0;
   margin-top: 40px;
   width: 100%;
+}
+
+fieldset.inputs {
+  display: flex;
+  margin: 0;
+  border: 0px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
 legend {
@@ -200,6 +287,26 @@ td {
 tr:hover td {
   background-color: var(--accent-blue-100);
   color: var(--accent-blue-700);
+}
+
+.status-badge {
+  font-size: 0.8em;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-active {
+  background-color: var(--primary-green-100);
+  color: var(--primary-green-700);
+  border: 1px solid var(--primary-green-300);
+}
+
+.status-archived {
+  background-color: var(--neutral-200);
+  color: var(--neutral-700);
+  border: 1px solid var(--neutral-400);
 }
 
 ul#myItems {
@@ -245,8 +352,35 @@ button.delete-item-btn:hover {
   color: var(--secondary-red-600);
 }
 
+.create-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.action-cell {
+  text-align: right;
+}
+
+button.delete-history-btn {
+  all: unset;
+  cursor: pointer;
+  color: var(--neutral-400);
+  font-weight: bold;
+  font-size: 1.5rem;
+  padding: 0 10px;
+  line-height: 0.8;
+  transition: color 0.2s;
+}
+
+button.delete-history-btn:hover {
+  color: var(--secondary-red-600);
+}
+
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 .badge {
@@ -265,4 +399,58 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+.add-form {
+  display: flex;
+  flex-direction: column; 
+  gap: 15px;
+  width: 100%;
+  max-width: 400px; 
+  margin-bottom: 20px;
+}
+
+.item-input {
+  width: 100%;
+  padding: 12px; 
+  border-radius: 8px;
+  border: 2px solid var(--neutral-400);
+  background: var(--neutral-100);
+  color: var(--neutral-800);
+  font-family: var(--nunito);
+  font-size: 1rem;
+  box-sizing: border-box;
+  text-align: center; 
+}
+
+.item-input:focus {
+  outline: none;
+  border-color: var(--accent-blue-600);
+  background: white;
+}
+
+.add-form .primary-btn {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.user-list-wrapper {
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+}
+
+.helper-text {
+  font-size: 0.85em;
+  color: var(--neutral-600);
+  margin-top: 10px;
+  font-style: italic;
+  text-align: center;
+}
+
+ul#myItems {
+  width: 100%;
 }

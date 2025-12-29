@@ -1,15 +1,15 @@
-<div class="container">
+<div class="container user">
   <h1>Add to List</h1>
   
-  <form id="addForm" style="display: flex; gap: 10px; width: 100%; max-width: 400px;">
-    <input type="text" id="itemInput" placeholder="Your Name / Item" required style="flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
-    <button type="submit" class="primary-btn" style="font-size: 1rem; padding: 0 20px;">Add</button>
+  <form id="addForm" class="add-form">
+    <input type="text" id="itemInput" placeholder="Your Name / Item" required class="item-input">
+    <button type="submit" class="primary-btn">Add</button>
   </form>
 
-  <div style="margin-top: 2em; width: 100%; max-width: 400px;">
+  <div class="user-list-wrapper hidden">
     <h3>You added:</h3>
     <ul id="myItems">
-      </ul>
-    <p style="font-size: 0.8em; color: var(--neutral-700);">Note: You can only see items you have added.</p>
+    </ul>
+    <p class="helper-text">Note: You can only see items you have added.</p>
   </div>
 </div>

@@ -15,7 +15,7 @@ function handleRequest(e) {
     const sheet = doc.getSheets()[0]
     const action = e.parameter.action
     const params = e.parameter
-    
+
     let result = {}
 
     if (action === "create") {
@@ -23,21 +23,30 @@ function handleRequest(e) {
       const rawTitle = params.title || "Quick List"
       const title = sanitize(rawTitle).substring(0, 50)
       const date = new Date().toISOString()
-      
-      sheet.appendRow([id, title, "[]", date, 0])
-      result = { id: id }
+
+      const durationHours = parseInt(params.duration) || 24
+      const expiryDate = new Date(new Date().getTime() + (durationHours * 60 * 60 * 1000)).toISOString()
+
+      sheet.appendRow([id, title, "[]", date, 0, expiryDate])
+      result = { id: id, expiry: expiryDate }
     } 
-    
+
     else if (action === "get") {
       const id = params.id
-      const data = getRowById(sheet, id)
-      if (data) {
+      const rowIndex = getRowIndexById(sheet, id)
+
+      if (rowIndex > -1) {
+        const rowData = sheet.getRange(rowIndex, 1, 1, 6).getValues()[0]
+        const expiryStr = rowData[5]
+        const isExpired = expiryStr ? (new Date() > new Date(expiryStr)) : false
+
         result = {
-          id: data[0],
-          title: data[1],
-          items: JSON.parse(data[2]),
-          createdAt: data[3],
-          participants: data[4]
+          id: rowData[0],
+          title: rowData[1],
+          items: JSON.parse(rowData[2]),
+          createdAt: rowData[3],
+          participants: rowData[4],
+          isExpired: isExpired 
         }
       } else {
         result = null
@@ -50,20 +59,21 @@ function handleRequest(e) {
       const item = sanitize(rawItem).substring(0, 200)
 
       const rowIndex = getRowIndexById(sheet, id)
-      
+
       if (rowIndex > -1 && item.length > 0) {
+
         const range = sheet.getRange(rowIndex, 3, 1, 3) 
         const values = range.getValues()[0]
-        
+
         let items = JSON.parse(values[0])
         let participants = values[2]
-        
+
         items.push(item)
         participants += 1
-        
+
         sheet.getRange(rowIndex, 3).setValue(JSON.stringify(items))
         sheet.getRange(rowIndex, 5).setValue(participants)
-        
+
         result = { success: true }
       } else {
         result = { success: false }
@@ -74,11 +84,11 @@ function handleRequest(e) {
       const id = params.id
       const item = params.item
       const rowIndex = getRowIndexById(sheet, id)
-      
+
       if (rowIndex > -1) {
         const cell = sheet.getRange(rowIndex, 3)
         let items = JSON.parse(cell.getValue())
-        
+
         const idx = items.indexOf(item)
         if (idx > -1) {
           items.splice(idx, 1)
@@ -95,10 +105,10 @@ function handleRequest(e) {
     else if (action === "stop") {
       const id = params.id
       const rowIndex = getRowIndexById(sheet, id)
-      
+
       if (rowIndex > -1) {
-        const rowValues = sheet.getRange(rowIndex, 1, 1, 5).getValues()[0]
-        
+        const rowValues = sheet.getRange(rowIndex, 1, 1, 6).getValues()[0]
+
         result = {
           id: rowValues[0],
           title: rowValues[1],
@@ -106,7 +116,7 @@ function handleRequest(e) {
           createdAt: rowValues[3],
           participants: rowValues[4]
         }
-        
+
         sheet.deleteRow(rowIndex)
       } else {
         result = null
@@ -124,14 +134,35 @@ function handleRequest(e) {
   }
 }
 
-function getRowById(sheet, id) {
-  const data = sheet.getDataRange().getValues()
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][0] == id) {
-      return data[i]
+// this being run by the trigger, either hourly or daily
+function removeExpiredLists() {
+  const lock = LockService.getScriptLock()
+  lock.tryLock(10000)
+
+  try {
+    const doc = SpreadsheetApp.getActiveSpreadsheet()
+    const sheet = doc.getSheets()[0]
+    const data = sheet.getDataRange().getValues()
+    const now = new Date()
+    const BUFFER_DAYS = 7 
+
+    for (let i = data.length - 1; i >= 1; i--) {
+      const expiryStr = data[i][5]
+      if (expiryStr) {
+        const expiryDate = new Date(expiryStr)
+
+        const deadDate = new Date(expiryDate.getTime() + (BUFFER_DAYS * 24 * 60 * 60 * 1000))
+
+        if (now > deadDate) {
+          sheet.deleteRow(i + 1)
+        }
+      }
     }
+  } catch (e) {
+    console.error("Auto-delete failed: " + e.toString())
+  } finally {
+    lock.releaseLock()
   }
-  return null
 }
 
 function getRowIndexById(sheet, id) {
@@ -147,7 +178,6 @@ function getRowIndexById(sheet, id) {
 function sanitize(str) {
   if (!str) return ""
   let clean = String(str)
-  
   if (/^[\=\+\-\@]/.test(clean)) {
     clean = "'" + clean
   }
